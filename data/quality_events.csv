@@ -1,0 +1,6 @@
+store_id,event_id,sku,location_id,batch_id,event_type,quantity,detected_at,source_return_id,supplier_id,status,root_cause,notes
+demo-store,QE-001,SKU-001,WH-01,BATCH-001-C,damage,1,2026-10-15T14:00:00+05:30,RET-003,SUP-001,quarantined,customer return damaged,Do not restock
+demo-store,QE-002,SKU-002,WH-01,BATCH-002-B,quality_reject,1,2026-10-14T11:00:00+05:30,,SUP-002,quarantined,seal defect,Supplier claim pending
+demo-store,QE-003,SKU-003,WH-01,BATCH-003-B,recall,1,2026-10-16T09:00:00+05:30,,SUP-003,blocked,battery overheating,Recall REC-2026-01
+demo-store,QE-004,SKU-005,WH-01,BATCH-005-B,expiry,1,2026-10-17T07:00:00+05:30,,SUP-005,expired,past expiry date,Dispose per policy
+demo-store,QE-005,SKU-003,WH-02,BATCH-003-D,quality_reject,1,2026-10-14T15:00:00+05:30,,SUP-003,quarantined,charging port defect,Repeat defect pattern

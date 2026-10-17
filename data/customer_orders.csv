@@ -1,0 +1,8 @@
+store_id,order_id,order_line_id,sku,quantity,channel,destination_region,requested_location_id,promised_date,status,priority
+demo-store,ORD-LOC-9001,LINE-1,SKU-001,12,storefront,North,WH-01,2026-10-19,open,high
+demo-store,ORD-LOC-9002,LINE-1,SKU-003,2,marketplace,South,MP-01,2026-10-18,open,high
+demo-store,ORD-LOC-9003,LINE-1,SKU-005,4,storefront,North,WH-01,2026-10-18,open,high
+demo-store,ORD-LOC-9004,LINE-1,SKU-002,8,wholesale,West,WH-02,2026-10-25,open,medium
+demo-store,ORD-LOC-9005,LINE-1,SKU-001,10,storefront,North,WH-01,2026-10-20,open,high
+demo-store,ORD-LOC-9006,LINE-1,SKU-004,20,wholesale,West,WH-02,2026-10-30,open,low
+demo-store,ORD-LOC-9007,LINE-1,SKU-003,1,marketplace,South,MP-01,2026-10-19,open,high

@@ -1,0 +1,11 @@
+store_id,from_location_id,to_location_id,lead_time_days,cost_per_unit_inr,max_transfer_qty,active
+demo-store,WH-01,WH-02,1,30,50,true
+demo-store,WH-02,WH-01,2,45,40,true
+demo-store,WH-01,WH-03,3,60,30,true
+demo-store,WH-03,WH-01,3,65,30,true
+demo-store,WH-02,WH-03,2,50,30,true
+demo-store,WH-03,WH-02,2,50,30,true
+demo-store,WH-01,STR-01,1,20,100,true
+demo-store,WH-01,MP-01,2,40,50,true
+demo-store,WH-02,MP-01,2,45,50,true
+demo-store,WH-03,MP-01,1,25,50,true

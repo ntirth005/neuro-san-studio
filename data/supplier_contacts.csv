@@ -1,0 +1,8 @@
+store_id,supplier_id,contact,channel,escalation_tier,active
+demo-store,SUP-001,ops@apex-apparel.example,email,Tier 1,true
+demo-store,SUP-002,orders@zenith-home.example,email,Tier 1,true
+demo-store,SUP-003,sales@sonic-electro.example,email,Tier 2,true
+demo-store,SUP-004,support@comfort-ergo.example,email,Tier 1,true
+demo-store,SUP-005,hello@artisan-pottery.example,email,Tier 2,true
+demo-store,SUP-ALT-01,sales@quick-apparel.example,email,Tier 2,true
+demo-store,SUP-ALT-03,sales@electro-express.example,email,Tier 2,true

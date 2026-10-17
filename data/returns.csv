@@ -1,0 +1,9 @@
+store_id,return_id,original_order_id,return_date,sku,quantity,return_reason,condition,refund_status,payment_method
+demo-store,RET-001,ORD-1001,2026-10-04T14:00:00+05:30,SKU-001,1,size_mismatch,resellable,refunded,COD
+demo-store,RET-002,ORD-1003,2026-10-06T11:30:00+05:30,SKU-001,2,customer_changed_mind,resellable,refunded,COD
+demo-store,RET-003,ORD-1005,2026-10-08T09:00:00+05:30,SKU-001,1,defective,damaged,refunded,prepaid
+demo-store,RET-004,ORD-1008,2026-10-05T16:00:00+05:30,SKU-002,1,wrong_item_shipped,resellable,refunded,COD
+demo-store,RET-005,ORD-1012,2026-10-07T10:00:00+05:30,SKU-003,1,not_as_described,resellable,refunded,prepaid
+demo-store,RET-006,ORD-1015,2026-10-06T15:30:00+05:30,SKU-004,1,customer_changed_mind,resellable,refunded,COD
+demo-store,RET-007,ORD-1002,2026-10-05T12:00:00+05:30,SKU-001,1,delivery_refused_cod,in_transit,pending,COD
+demo-store,RET-008,ORD-1004,2026-10-07T08:30:00+05:30,SKU-001,1,delivery_refused_cod,in_transit,pending,COD

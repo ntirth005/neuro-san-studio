@@ -1,0 +1,7 @@
+store_id,sku,product_name,category,unit_cost,selling_price,currency,unit_of_measure,active
+demo-store,SKU-001,Classic Cotton T-Shirt (Blue M),Apparel,250.0,499.0,INR,each,true
+demo-store,SKU-002,Insulated Steel Water Bottle 750ml,Home & Kitchen,180.0,349.0,INR,each,true
+demo-store,SKU-003,Wireless Noise-Canceling Earbuds,Electronics,1800.0,3499.0,INR,each,true
+demo-store,SKU-004,Ergonomic Memory Foam Seat Cushion,Office,450.0,899.0,INR,each,true
+demo-store,SKU-005,Ceramic Pour-Over Coffee Dripper,Home & Kitchen,320.0,649.0,INR,each,true
+demo-store,SKU-006,Bamboo Desk Organizer (New),Office,120.0,299.0,INR,each,true

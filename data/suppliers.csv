@@ -1,0 +1,6 @@
+store_id,supplier_id,supplier_name,sku,lead_time_days,lead_time_std_dev,minimum_order_qty,case_pack_qty,unit_cost,currency,payment_terms,on_time_delivery_pct,quality_reject_pct,volume_tier_discount_pct,volume_tier_threshold,active
+demo-store,SUP-001,Apex Apparel Crafts,SKU-001,7,2.1,20,5,250.00,INR,Net 30,88.5,1.2,5.0,100,true
+demo-store,SUP-002,Zenith Home Supplies,SKU-002,12,3.5,12,6,180.00,INR,Net 15,92.0,0.8,3.0,50,true
+demo-store,SUP-003,Sonic Electro Corp,SKU-003,14,4.8,10,5,1800.00,INR,Advance 50%,78.0,2.5,8.0,30,true
+demo-store,SUP-004,Comfort Ergonomics Ltd,SKU-004,5,1.0,10,10,450.00,INR,Net 30,97.5,0.3,4.0,80,true
+demo-store,SUP-005,Artisan Pottery Works,SKU-005,10,3.0,8,4,320.00,INR,Net 15,85.0,1.8,6.0,40,true

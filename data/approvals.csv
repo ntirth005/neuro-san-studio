@@ -1,0 +1,7 @@
+store_id,task_id,task_type,reference_id,requested_at,requested_by,amount_inr,status,decided_at,approver,sla_hours,notes
+demo-store,APR-001,replenishment_plan,PLAN-2026-10-17,2026-10-14T09:00:00+05:30,Capital_Risk_Auditor,26810,pending,,Ops Manager,24,"Budget INR 30,000"
+demo-store,APR-002,purchase_order_send,PO-2026-1001,2026-10-16T10:00:00+05:30,Supplier_Coordination,5000,pending,,Ops Manager,24,Overdue supplier confirmation
+demo-store,APR-003,inventory_adjustment,ADJ-001,2026-10-15T12:00:00+05:30,Inventory_Integrity_Analyst,250,approved,2026-10-15T15:00:00+05:30,Finance Manager,24,Cycle count correction
+demo-store,APR-004,recall_block,REC-2026-01,2026-10-16T12:00:00+05:30,Quality_Control_Analyst,0,pending,,Quality Manager,12,Block marketplace exposure
+demo-store,APR-005,transfer_execution,TRF-102,2026-10-14T08:00:00+05:30,Network_Fulfillment_Analyst,450,approved,2026-10-14T10:00:00+05:30,Ops Manager,24,Expedite WH-02 to WH-01
+demo-store,APR-006,purchase_order_send,PO-2026-1006,2026-10-17T09:10:00+05:30,Supplier_Coordination,5000,approved,2026-10-17T09:20:00+05:30,Ops Manager,24,Approved send for overflow warehouse PO

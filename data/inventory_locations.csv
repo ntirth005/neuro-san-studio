@@ -1,0 +1,7 @@
+store_id,location_id,location_name,location_type,channel,overlap_group,active
+demo-store,WH-01,Main Warehouse,warehouse,all,,true
+demo-store,WH-02,Overflow Warehouse,warehouse,all,,true
+demo-store,WH-03,Marketplace-Fulfilled Warehouse,warehouse,marketplace,OVERLAP-1,true
+demo-store,STR-01,Storefront,channel,storefront,,true
+demo-store,MP-01,Marketplace FBA,channel,marketplace,OVERLAP-1,true
+demo-store,MP-02,Marketplace B,channel,marketplace,,true

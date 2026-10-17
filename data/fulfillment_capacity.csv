@@ -1,0 +1,7 @@
+store_id,location_id,daily_units_capacity,cost_per_unit_inr,cutoff_hour,active
+demo-store,WH-01,180,12,14,true
+demo-store,WH-02,120,10,14,true
+demo-store,WH-03,90,11,15,true
+demo-store,STR-01,40,8,16,true
+demo-store,MP-01,80,9,15,true
+demo-store,MP-02,60,10,15,true

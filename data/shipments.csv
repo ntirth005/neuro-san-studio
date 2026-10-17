@@ -1,0 +1,3 @@
+store_id,shipment_id,po_id,sku,shipped_qty,ship_date,expected_arrival
+demo-store,SHP-1003,PO-2026-1003,SKU-005,7,2026-10-14,2026-10-15
+demo-store,SHP-1004,PO-2026-1004,SKU-002,24,2026-10-09,2026-10-12

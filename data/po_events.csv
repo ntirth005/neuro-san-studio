@@ -1,0 +1,17 @@
+store_id,event_id,po_id,event_type,occurred_at,detail
+demo-store,PE-0001,PO-2026-1001,sent,2026-10-14T10:00:00+05:30,PO transmitted to supplier
+demo-store,PE-0002,PO-2026-1002,sent,2026-10-10T09:00:00+05:30,PO transmitted to supplier
+demo-store,PE-0003,PO-2026-1002,acknowledged,2026-10-11T10:00:00+05:30,Supplier acknowledged
+demo-store,PE-0004,PO-2026-1002,date_change,2026-10-11T10:05:00+05:30,Confirmed date changed from 2026-10-18 to 2026-10-25
+demo-store,PE-0005,PO-2026-1003,sent,2026-10-08T11:00:00+05:30,PO transmitted to supplier
+demo-store,PE-0006,PO-2026-1003,acknowledged,2026-10-09T09:00:00+05:30,Supplier acknowledged
+demo-store,PE-0007,PO-2026-1003,shipment,2026-10-14T16:00:00+05:30,Shipped 7 of 12 units
+demo-store,PE-0008,PO-2026-1003,receipt,2026-10-16T11:00:00+05:30,Received 7 of 12 units
+demo-store,PE-0009,PO-2026-1004,sent,2026-10-05T08:00:00+05:30,PO transmitted to supplier
+demo-store,PE-0010,PO-2026-1004,acknowledged,2026-10-05T10:00:00+05:30,Supplier acknowledged
+demo-store,PE-0011,PO-2026-1004,shipment,2026-10-09T09:00:00+05:30,Shipped 24 units
+demo-store,PE-0012,PO-2026-1004,receipt,2026-10-12T09:00:00+05:30,Received 24 units
+demo-store,PE-0013,PO-2026-1005,sent,2026-10-15T14:00:00+05:30,PO transmitted to supplier
+demo-store,PE-0014,PO-2026-1005,acknowledged,2026-10-16T09:00:00+05:30,Supplier acknowledged
+demo-store,PE-0015,PO-2026-1005,price_change,2026-10-16T09:05:00+05:30,Unit cost changed from 450.00 to 495.00
+demo-store,PE-0016,PO-2026-1006,sent,2026-10-16T15:00:00+05:30,PO transmitted to supplier

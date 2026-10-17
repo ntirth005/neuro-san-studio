@@ -1,0 +1,7 @@
+store_id,action_id,action_type,reference_id,idempotency_key,requested_at,completed_at,status,result,error,reversal_of
+demo-store,ACT-001,inventory_adjustment,ADJ-001,adj-001,2026-10-16T17:00:00+05:30,2026-10-16T17:05:00+05:30,completed,Adjusted -1 unit SKU-001 WH-01,,
+demo-store,ACT-002,po_draft,PO-2026-1001,po-1001,2026-10-15T10:00:00+05:30,2026-10-15T10:01:00+05:30,completed,Draft created,,
+demo-store,ACT-003,po_send,PO-2026-1001,send-1001,2026-10-16T10:00:00+05:30,,failed,,Approval missing,
+demo-store,ACT-004,transfer_execution,TRF-102,trf-102,2026-10-14T08:00:00+05:30,,pending,,,
+demo-store,ACT-005,recall_block,REC-2026-01,recall-01,2026-10-16T12:00:00+05:30,,blocked,,Marketplace API unavailable,
+demo-store,ACT-006,po_draft,PLAN-2026-10-17,plan-2026-10-17,2026-10-17T09:00:00+05:30,2026-10-17T09:01:00+05:30,completed,Draft created,,

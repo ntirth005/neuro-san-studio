@@ -1,0 +1,8 @@
+store_id,count_id,sku,location_id,counted_at,system_qty,counted_qty,variance,status
+demo-store,CNT-001,SKU-001,WH-01,2026-10-16,13,12,-1,completed
+demo-store,CNT-002,SKU-003,WH-01,2026-10-10,6,5,-1,completed
+demo-store,CNT-003,SKU-005,WH-01,2026-10-12,3,3,0,completed
+demo-store,CNT-004,SKU-002,WH-01,2026-09-28,18,16,-2,completed
+demo-store,CNT-005,SKU-004,WH-01,2026-09-15,85,85,0,completed
+demo-store,CNT-006,SKU-001,WH-01,2026-10-02,15,14,-1,completed
+demo-store,CNT-007,SKU-001,WH-01,2026-09-18,16,15,-1,completed

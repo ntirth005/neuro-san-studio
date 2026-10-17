@@ -1,0 +1,5 @@
+store_id,recommendation_id,generated_at,model_version,policy_version,inputs_hash,sku,recommendation_type,recommendation,evidence_json,status,superseded_by,change_reason
+demo-store,REC-1001,2026-10-15T09:00:00+05:30,gpt-4o-mini,POL-2026-09,abc123,SKU-003,reorder_quantity,Order 10 units,"{""daily_velocity"": 0.4, ""lead_time"": 14}",superseded,REC-1002,Demand spike detected on 2026-10-16
+demo-store,REC-1002,2026-10-16T18:00:00+05:30,gpt-4o-mini,POL-2026-10,def456,SKU-003,reorder_quantity,Order 15 units,"{""daily_velocity"": 0.61, ""lead_time"": 14}",active,,Velocity increased and lead-time jitter widened
+demo-store,REC-1003,2026-10-16T18:05:00+05:30,gpt-4o-mini,POL-2026-10,ghi789,SKU-005,reorder_quantity,Order 8 units,"{""daily_velocity"": 0.96, ""lead_time"": 10}",active,,Critical days of supply
+demo-store,REC-1004,2026-10-16T18:10:00+05:30,gpt-4o-mini,POL-2026-10,jkl012,SKU-001,reorder_quantity,Order 25 units,"{""daily_velocity"": 4.36, ""lead_time"": 7}",active,,Critical days of supply

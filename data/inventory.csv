@@ -1,0 +1,13 @@
+store_id,sku,location_id,on_hand_qty,reserved_qty,incoming_qty,unavailable_qty,snapshot_at
+demo-store,SKU-001,WH-01,12,4,0,0,2026-10-17T09:00:00+05:30
+demo-store,SKU-001,WH-02,8,2,0,0,2026-10-17T08:30:00+05:30
+demo-store,SKU-002,WH-01,16,2,6,1,2026-10-17T09:00:00+05:30
+demo-store,SKU-002,WH-02,10,0,0,0,2026-10-17T08:30:00+05:30
+demo-store,SKU-002,WH-03,10,0,0,0,2026-10-16T20:00:00+05:30
+demo-store,SKU-003,WH-01,5,1,0,0,2026-10-17T09:00:00+05:30
+demo-store,SKU-003,WH-02,3,0,0,0,2026-10-17T08:30:00+05:30
+demo-store,SKU-004,WH-01,85,3,10,0,2026-10-17T09:00:00+05:30
+demo-store,SKU-004,WH-02,20,0,0,0,2026-10-17T08:30:00+05:30
+demo-store,SKU-005,WH-01,4,0,0,0,2026-10-17T09:00:00+05:30
+demo-store,SKU-005,WH-02,2,0,0,0,2026-10-17T08:30:00+05:30
+demo-store,SKU-006,WH-01,30,0,0,0,2026-10-17T09:00:00+05:30

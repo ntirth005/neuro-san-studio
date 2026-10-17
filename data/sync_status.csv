@@ -1,0 +1,6 @@
+store_id,location_id,last_sync_at,expected_interval_minutes,status
+demo-store,WH-01,2026-10-17T09:00:00+05:30,60,ok
+demo-store,WH-02,2026-10-17T08:30:00+05:30,60,ok
+demo-store,WH-03,2026-10-17T08:00:00+05:30,60,ok
+demo-store,STR-01,2026-10-17T10:00:00+05:30,30,ok
+demo-store,MP-01,2026-10-16T18:00:00+05:30,60,stale

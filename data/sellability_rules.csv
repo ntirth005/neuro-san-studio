@@ -1,0 +1,7 @@
+store_id,channel,location_id,location_type,allow_sale,require_reservation,max_days_to_expiry,quality_status_required,note
+demo-store,storefront,STR-01,channel,true,true,30,sellable,Storefront sells only from STR-01
+demo-store,marketplace,MP-01,channel,true,true,60,sellable,Marketplace FBA inventory
+demo-store,marketplace,MP-02,channel,true,true,60,sellable,Marketplace B inventory
+demo-store,all,WH-01,warehouse,true,false,999,sellable,Warehouse can fulfill transfers and wholesale
+demo-store,all,WH-02,warehouse,true,false,999,sellable,Warehouse can fulfill transfers and wholesale
+demo-store,all,WH-03,warehouse,true,false,999,sellable,Warehouse can fulfill transfers and wholesale

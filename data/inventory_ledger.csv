@@ -1,0 +1,10 @@
+store_id,event_id,sku,location_id,event_type,quantity_delta,reference_id,occurred_at,note
+demo-store,EV-0001,SKU-006,MP-01,opening_balance,0,OPEN-006,2026-10-01T00:00:00+05:30,Opening balance for new SKU
+demo-store,EV-0002,SKU-006,MP-01,order,-2,ORD-MP-9001,2026-10-10T12:00:00+05:30,Marketplace oversell
+demo-store,EV-0003,SKU-006,MP-01,order,-1,ORD-MP-9002,2026-10-12T15:00:00+05:30,Marketplace oversell
+demo-store,EV-0004,SKU-006,MP-01,sync_adjustment,0,SYNC-9001,2026-10-16T18:00:00+05:30,Sync did not correct negative balance
+demo-store,EV-0005,SKU-001,WH-01,order,-4,ORD-1001,2026-10-14T10:00:00+05:30,Fulfilled order
+demo-store,EV-0006,SKU-001,WH-01,return,1,RET-001,2026-10-15T14:00:00+05:30,Resellable return
+demo-store,EV-0007,SKU-001,WH-01,transfer,-2,TRF-001,2026-10-16T09:00:00+05:30,Transfer to overflow warehouse
+demo-store,EV-0008,SKU-001,WH-02,transfer,2,TRF-001,2026-10-16T09:00:00+05:30,Transfer from main warehouse
+demo-store,EV-0009,SKU-001,WH-01,adjustment,-1,ADJ-001,2026-10-16T17:00:00+05:30,Cycle count adjustment

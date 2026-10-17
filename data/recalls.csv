@@ -1,0 +1,2 @@
+store_id,recall_id,sku,batch_id,recall_date,reason,status,authority,affected_channels
+demo-store,REC-2026-01,SKU-003,BATCH-003-B,2026-10-16,battery overheating,active,internal,"storefront,marketplace"

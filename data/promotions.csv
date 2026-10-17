@@ -1,0 +1,4 @@
+store_id,promo_id,sku,start_date,end_date,uplift_percent,channel
+demo-store,PROMO-001,SKU-001,2026-08-10,2026-08-16,100.0,storefront
+demo-store,PROMO-002,SKU-002,2026-06-20,2026-06-23,50.0,marketplace
+demo-store,PROMO-003,SKU-003,2026-05-15,2026-05-18,100.0,storefront

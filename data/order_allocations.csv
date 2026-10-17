@@ -1,0 +1,8 @@
+store_id,order_id,order_line_id,sku,location_id,allocated_qty,allocated_at,allocation_status,conflict_reason
+demo-store,ORD-LOC-9001,LINE-1,SKU-001,WH-01,0,2026-10-17T09:00:00+05:30,unallocated,
+demo-store,ORD-LOC-9002,LINE-1,SKU-003,MP-01,2,2026-10-17T08:30:00+05:30,allocated,batch recalled
+demo-store,ORD-LOC-9003,LINE-1,SKU-005,WH-01,4,2026-10-17T08:35:00+05:30,allocated,1 unit expired
+demo-store,ORD-LOC-9004,LINE-1,SKU-002,WH-02,8,2026-10-17T08:40:00+05:30,allocated,
+demo-store,ORD-LOC-9005,LINE-1,SKU-001,WH-01,10,2026-10-17T08:45:00+05:30,over_allocated,only 8 units free at WH-01
+demo-store,ORD-LOC-9006,LINE-1,SKU-004,WH-02,20,2026-10-17T08:50:00+05:30,allocated,
+demo-store,ORD-LOC-9007,LINE-1,SKU-003,MP-01,1,2026-10-17T08:55:00+05:30,allocated,batch recalled

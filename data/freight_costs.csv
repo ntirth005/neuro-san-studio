@@ -1,0 +1,7 @@
+store_id,po_id,supplier_id,freight_inr,duties_inr,handling_inr,shortage_penalty_inr,invoice_date,currency
+demo-store,PO-2026-1001,SUP-001,800,0,100,0,2026-10-15,INR
+demo-store,PO-2026-1002,SUP-003,1500,300,150,0,2026-10-11,INR
+demo-store,PO-2026-1003,SUP-005,400,0,50,250,2026-10-16,INR
+demo-store,PO-2026-1004,SUP-002,600,0,80,0,2026-10-12,INR
+demo-store,PO-2026-1005,SUP-004,300,0,40,0,2026-10-15,INR
+demo-store,PO-2026-1006,SUP-001,700,0,90,0,2026-10-16,INR

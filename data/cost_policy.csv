@@ -1,0 +1,2 @@
+policy_id,holding_rate_pct,ordering_cost_inr,stockout_penalty_pct,freight_per_order_inr
+DEFAULT,22.0,750.0,35.0,500.0

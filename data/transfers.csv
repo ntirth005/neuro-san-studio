@@ -1,0 +1,6 @@
+store_id,transfer_id,sku,from_location_id,to_location_id,quantity,status,created_at,shipped_at,expected_arrival,received_at,transfer_cost_inr,carrier,linked_order_id
+demo-store,TRF-101,SKU-001,WH-02,WH-01,4,in_transit,2026-10-16T09:00:00+05:30,2026-10-16T10:00:00+05:30,2026-10-18,,600,BlueDart,ORD-LOC-9001
+demo-store,TRF-102,SKU-002,WH-02,WH-01,5,delayed,2026-10-14T08:00:00+05:30,2026-10-14T09:00:00+05:30,2026-10-16,,450,Delhivery,
+demo-store,TRF-103,SKU-004,WH-01,WH-02,10,received,2026-10-12T09:00:00+05:30,2026-10-12T10:00:00+05:30,2026-10-13,2026-10-13T11:00:00+05:30,300,BlueDart,
+demo-store,TRF-104,SKU-005,WH-02,WH-01,2,planned,2026-10-17T08:00:00+05:30,,2026-10-19,,250,Delhivery,
+demo-store,TRF-105,SKU-003,WH-01,WH-02,2,in_transit,2026-10-17T09:00:00+05:30,2026-10-17T09:30:00+05:30,2026-10-18,,400,BlueDart,

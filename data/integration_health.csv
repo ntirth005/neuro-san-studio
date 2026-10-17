@@ -1,0 +1,6 @@
+store_id,system,last_success_at,last_attempt_at,status,expected_interval_minutes,error_message
+demo-store,marketplace_api,2026-10-16T18:00:00+05:30,2026-10-17T10:00:00+05:30,down,60,HTTP 503
+demo-store,email,2026-10-17T09:00:00+05:30,2026-10-17T09:00:00+05:30,ok,60,
+demo-store,erp,2026-10-17T09:30:00+05:30,2026-10-17T09:30:00+05:30,ok,60,
+demo-store,payments,2026-10-17T09:45:00+05:30,2026-10-17T09:45:00+05:30,ok,60,
+demo-store,wms,2026-10-17T09:55:00+05:30,2026-10-17T09:55:00+05:30,ok,60,
