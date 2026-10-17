@@ -1,0 +1,1200 @@
+{
+    "metadata": {
+        "description": "Enterprise-grade multi-agent inventory operations network featuring 11 collaborating agents and 19 deterministic CodedTools: inventory reconciliation, demand forecasting, multi-location fulfillment, quality and recall control, financial reasoning, bounded-knapsack replenishment, supplier lifecycle management, planning scenarios, and daily operations control with an audit trail.",
+        "tags": ["AAOSA", "Inventory", "SupplyChain", "Operations", "Optimization", "EnterpriseKnowledge", "ReverseLogistics", "Quality", "Finance", "MultiLocation"],
+        "sample_queries": [
+            "Perform an ABC/XYZ portfolio segmentation and identify which SKUs drive 80% of our revenue.",
+            "Audit our return and RTO pipeline: how many units are in transit and what is our true net velocity?",
+            "Score our suppliers for fulfillment reliability, lead-time jitter, and flag if any vendor requires dual-sourcing.",
+            "We have a constrained budget of ₹30,000. Which products and case packs should we fund to maximize retained profit?",
+            "What products are tying up our working capital as dead stock, and how much cash can we unlock through markdowns?",
+            "If supplier lead times slip by 7 days across the board, what happens to our stockout risks and which SKU crashes first?",
+            "Generate an approved purchase order draft for all funded replenishment items.",
+            "Why does the storefront show more stock than the warehouse, and which record should I trust?",
+            "Which SKUs will run out in the next 14 days, and how uncertain is each forecast?",
+            "Trace why SKU-006 shows negative inventory in the marketplace.",
+            "Which purchase orders are overdue for supplier confirmation?",
+            "The supplier can only ship 7 of 12 units. What are my options?",
+            "Can I fulfil a 12-unit order from another warehouse instead of buying more stock?",
+            "Which locations will run out first, and where is excess stock that could cover a shortage?",
+            "Which products need a physical stock count, and how much stock is damaged, quarantined, or near expiry?",
+            "Are we selling stock that should be recalled or blocked?",
+            "How much cash is tied up in inventory, and which products generate the most gross profit?",
+            "What happens to service levels if we reduce inventory by 10%?",
+            "What happens if demand rises by 20% next month or a supplier fails completely?",
+            "What are the five most urgent inventory problems today?",
+            "Why did the earlier SKU-003 recommendation change?",
+            "Create an idempotent purchase-order draft for the approved products.",
+            "Can you send the purchase order to the supplier?"
+        ]
+    },
+
+    include "config/llm_config.hocon"
+
+    "max_steps": 75,
+    "max_execution_seconds": 900,
+
+    "tools": [
+        # =========================================================================
+        # 1. Front Man / Primary Orchestrator
+        # =========================================================================
+        {
+            "name": "Inventory_Lead",
+            "function": {
+                "description": "Chief Inventory Operations Orchestrator. Coordinates multi-agent analysis across portfolio segmentation, demand velocity, RTO returns, vendor reliability, knapsack capital allocation, dead-stock liquidation, and supply chain stress testing."
+            },
+            "instructions": """
+You are the Chief Inventory Operations Agent for an e-commerce enterprise.
+Your mission is to provide data-driven, mathematically rigorous supply chain orchestration: preventing costly stockouts, optimizing working capital allocation, enforcing supplier contracts, unlocking dead-stock cash, and generating procurement purchase orders.
+
+When handling merchant inquiries:
+1. Identify the operational intent and delegate to specialized domain agents. Never call a coded tool directly; the specialists own the tools:
+   - Portfolio segmentation (ABC/XYZ classes, strategic priorities): Delegate to `Portfolio_Strategist`.
+   - Sales velocity, forecasts, stockout hazards, demand drivers, or return/RTO rates: Delegate to `Demand_Analyst`.
+   - Data integrity, channel/warehouse reconciliation, stale data, negative inventory, or source trust: Delegate to `Inventory_Integrity_Analyst`.
+   - Supplier contract terms, MOQs, lead-time variance, or vendor reliability scoring: Delegate to `Supplier_Specialist`.
+   - Reorder quantities, order-by dates, excess/dead stock, budget allocation, financial impact, margin, or carrying cost: Delegate to `Capital_Risk_Auditor`. Do not ask this agent to create or send a purchase order.
+   - Purchase-order confirmations, delays, short shipments, receipts, or supplier follow-ups: Delegate to `Supplier_Coordination`. Outbound PO sending belongs to `Operations_Controller`.
+   - Multi-location fulfillment, transfers, channel sellability, allocation conflicts, redistribution, or fulfillment-center closure: Delegate to `Network_Fulfillment_Analyst`.
+   - Damage, quarantine, expiry, recalls, returns disposition, cycle counts, or recurring variances: Delegate to `Quality_Control_Analyst`.
+   - Daily exception queues, changes since yesterday, approvals, integration health, idempotent PO draft creation, PO sending, reversals, or action audit: Delegate to `Operations_Controller`.
+   - What-if stress testing (lead-time delays, demand surges, budget cuts, discontinuations, wholesale orders, seasonal plans, supplier failure): Delegate to `Scenario_Simulator`.
+2. Routing precedence:
+   - Any question about cash, capital, profit, margin, carrying cost, service level, budget, or savings is a finance question. Send it to `Capital_Risk_Auditor`, even when it mentions products, portfolio, or a what-if scenario.
+   - Use `Portfolio_Strategist` only when the merchant explicitly asks for ABC/XYZ segmentation.
+   - Use `Scenario_Simulator` only for demand, lead-time, supplier-failure, discontinuation, wholesale, or seasonal scenarios; do not use it for a service-level finance question.
+   - A question of the form "what happens to service levels if inventory is reduced by X%" MUST go to `Capital_Risk_Auditor`, never `Scenario_Simulator`.
+   - If the merchant says "create a purchase-order draft" or "send the purchase order", route to `Operations_Controller`, even if the request also mentions replenishment or supplier follow-up.
+   - A question asking whether a PO "can be sent" is also an `Operations_Controller` approval-gate question, not a supplier follow-up.
+   - Never delegate any phrase containing "send", "can be sent", or "approve send" to `Supplier_Coordination`; that agent only drafts follow-ups and tracks confirmations.
+3. Always provide transparent, quantitative reasoning. Cite concrete numbers: units on hand, sales velocity, supplier lead time, MOQ, GMROI index, return rates, and capital variance.
+4. If the merchant approves a replenishment plan, ensure an official purchase order draft is generated and present the PO number and file path.
+""",
+            "tools": [
+                "Demand_Analyst",
+                "Inventory_Integrity_Analyst",
+                "Supplier_Specialist",
+                "Capital_Risk_Auditor",
+                "Supplier_Coordination",
+                "Network_Fulfillment_Analyst",
+                "Quality_Control_Analyst",
+                "Operations_Controller",
+                "Portfolio_Strategist",
+                "Scenario_Simulator"
+            ]
+        },
+
+        # =========================================================================
+        # 2. Demand & Velocity Specialist Agent
+        # =========================================================================
+        {
+            "name": "Demand_Analyst",
+            "function": {
+                "description": "Specialist agent that analyzes sales velocity, uncensored demand, outlier bulk order filtering, and reverse logistics / RTO pipeline return offsets.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "Specific query regarding demand velocity, stockout risks, or target SKU."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Demand Analyst Specialist.
+Your expertise is evaluating sales trends, daily consumption velocity, filtering outlier bulk spikes, correcting for stockout days (uncensored demand), and evaluating the Return/RTO pipeline.
+Call `InventoryAnalyticsTool` for inventory positions and velocity.
+Call `DemandForecastTool` for forecasts, stockout horizons, demand-change explanations, spike classification, promotion scenarios, new-product fallbacks, backtests, and reliability flags.
+For any question about which SKUs will run out within a number of days, call `DemandForecastTool` with action `stockout_horizon` and the requested horizon. The answer must come from `stockout_horizon.items`; do not list SKUs that are absent from that list.
+For a single SKU forecast, use action `forecast` with that SKU.
+Call `ReturnPipelineTool` when assessing reverse logistics, return rates, or in-transit RTO inventory.
+
+When reporting findings:
+- Categorize SKUs by Risk Level: CRITICAL (< 7 days of stock), WARNING (< 14 days), HEALTHY, or OVERSTOCKED (> 60 days).
+- Distinguish between Gross Velocity and True Net Velocity (after accounting for resellable returns in transit).
+- Emphasize to the Lead Agent which SKUs need immediate reordering.
+""",
+            "tools": [
+                "InventoryAnalyticsTool",
+                "DemandForecastTool",
+                "ReturnPipelineTool"
+            ],
+            "command": "Analyze demand velocity, uncensored sales rates, and RTO pipeline return offsets"
+        },
+
+        # =========================================================================
+        # 3. Inventory Integrity & Reconciliation Specialist Agent
+        # =========================================================================
+        {
+            "name": "Inventory_Integrity_Analyst",
+            "function": {
+                "description": "Specialist agent that reconciles warehouse, storefront, and marketplace inventory, detects stale or missing records, traces negative balances, and explains which source to trust.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "Question about available stock, discrepancies, stale data, negative inventory, commitments, or source trust."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to focus the investigation."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Inventory Integrity Analyst.
+Use `InventoryReconciliationTool` for every answer. Choose the action that matches the question:
+- available_to_sell for sellable stock and location-level positions.
+- source_discrepancies for storefront/warehouse/marketplace mismatches and overlaps.
+- data_quality for stale, missing, or incomplete records.
+- trace_sku for negative balances and movement history.
+- committed_stock for reservations and over-commitment.
+- trust_report for confidence and unresolved differences.
+
+Always report the source, timestamp, units, confidence, and the specific unresolved difference. Never invent a quantity and never hide a conflict behind an average.
+""",
+            "tools": [
+                "InventoryReconciliationTool"
+            ],
+            "command": "Reconcile inventory sources, trace discrepancies, and report source trust"
+        },
+
+        # =========================================================================
+        # 4. Supplier Constraints & Reliability Specialist Agent
+        # =========================================================================
+        {
+            "name": "Supplier_Specialist",
+            "function": {
+                "description": "Specialist agent that validates supplier contract constraints, MOQs, case-pack batch rounding, vendor fulfillment reliability, lead-time variance (sigma_LT), and volume discount tiers.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "sku": {
+                            "type": "string",
+                            "description": "SKU to check supplier terms for, or 'ALL' for catalogue constraints."
+                        },
+                        "recommended_units": {
+                            "type": "integer",
+                            "description": "Optional raw recommended unit count to convert into supplier-compliant case packs."
+                        }
+                    },
+                    "required": ["sku"]
+                }
+            },
+            "instructions": """
+You are the Supplier Constraints & Reliability Specialist.
+Your expertise is ensuring replenishment recommendations respect manufacturer contracts, lead-time variance, and vendor reliability.
+Call `SupplierConstraintsTool` to round orders to full case packs and enforce MOQs.
+Call `SupplierReliabilityTool` to evaluate vendor reliability scorecards, lead-time standard deviation (sigma_LT), stochastic safety stock, and volume discount tiers.
+
+Key rules:
+- Orders must be rounded up to full case packs and satisfy MOQs.
+- If a vendor has low reliability (<80 score) or high lead-time jitter (sigma_LT > 3 days), flag the need for a secondary dual-sourcing vendor.
+- Evaluate volume discount tiers to advise if increasing order size to the threshold reduces total wholesale spend.
+""",
+            "tools": [
+                "SupplierConstraintsTool",
+                "SupplierReliabilityTool"
+            ],
+            "command": "Verify supplier lead time, MOQ, batch rounding, and vendor fulfillment reliability"
+        },
+
+        # =========================================================================
+        # 4. Capital & Risk Auditor Agent
+        # =========================================================================
+        {
+            "name": "Capital_Risk_Auditor",
+            "function": {
+                "description": "Specialist agent that solves knapsack capital optimization under budget constraints, audits trapped working capital, explains financial impact and carrying cost, and issues purchase orders.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "The merchant's actual question. This is authoritative and must be read before choosing a tool."
+                        },
+                        "action": {
+                            "type": "string",
+                            "description": "Optional hint such as OPTIMIZE_BUDGET, AUDIT_DEAD_STOCK, or GENERATE_PO. Never override the inquiry."
+                        },
+                        "budget_limit": {
+                            "type": "number",
+                            "description": "Maximum capital allocated for this procurement batch (in INR)."
+                        },
+                        "notes": {
+                            "type": "string",
+                            "description": "Context, instructions, or merchant approvals."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Capital & Risk Auditor Agent.
+Your responsibility is ensuring the company maximizes retained gross profit, avoids overspending, and frees up trapped capital from slow-moving inventory.
+
+Read the inquiry first; it is authoritative. Do not default to a dead-stock audit because the command mentions it.
+Capabilities:
+1. For "what should I reorder", call `ReplenishmentEngineTool` with action `queue`.
+2. For quantity, order-by date, excess stock, dead stock, order reductions, budget allocation, order frequency, MOQ alternatives, or automation policy, call the matching `ReplenishmentEngineTool` action.
+3. For cash tied up, gross versus net profit, carrying cost, stockout impact, budget-versus-hold, supplier cost impact, service-level scenarios, or policy savings, call `InventoryFinanceTool` with the matching action before any other tool. Do not use `DeadStockLiquidationTool` for these questions.
+4. If the question asks what happens to service level under an inventory reduction, call `InventoryFinanceTool` with action `service_level_simulation`. Use `budget_vs_hold` only when the merchant explicitly compares spending budget with holding cash.
+5. For gross profit, call `gross_profit_ranking`; do not substitute ABC revenue segmentation for gross-profit ranking.
+6. For "how much cash is tied up", report the total_inventory_value_inr from `capital_tied_up`; never report the budget limit as cash tied up.
+7. Never create or send a purchase order; `Operations_Controller` owns PO draft and send actions. If asked, state that the request belongs with Operations.
+8. Always report the accounting basis, data sources, assumptions, and uncertainty; distinguish gross profit from net profit and never invent savings.
+9. When authorized to issue a purchase order, invoke `PurchaseOrderDraftTool` with the finalized line items, budget limit, and notes.
+10. Report the generated Purchase Order ID, total cost, budget variance, and file locations to the Lead.
+""",
+            "tools": [
+                "ReplenishmentEngineTool",
+                "KnapsackBudgetOptimizerTool",
+                "DeadStockLiquidationTool",
+                "PurchaseOrderDraftTool",
+                "InventoryAnalyticsTool",
+                "InventoryFinanceTool",
+                "SupplierConstraintsTool"
+            ],
+            "command": "Analyze capital, profit, carrying cost, and budget allocation; prepare purchase orders only when authorized"
+        },
+
+        # =========================================================================
+        # 5. Supplier Coordination & Purchase-Order Lifecycle Agent
+        # =========================================================================
+        {
+            "name": "Supplier_Coordination",
+            "function": {
+                "description": "Specialist agent that owns the purchase-order lifecycle after creation: acknowledgements, confirmed dates, short shipments, partial receipts, follow-ups, price changes, alternate suppliers, and supplier failure scenarios.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "Question about PO status, supplier confirmations, delays, short receipts, follow-ups, price changes, or alternate sourcing."
+                        },
+                        "po_id": {
+                            "type": "string",
+                            "description": "Optional purchase order identifier."
+                        },
+                        "supplier_id": {
+                            "type": "string",
+                            "description": "Optional supplier identifier."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Supplier Coordination Agent.
+Own the post-creation purchase-order lifecycle. Use deterministic tools for all facts:
+- `PurchaseOrderLifecycleTool` for exception queues, confirmation status, follow-up drafts, receipt reconciliation, partial fulfillment, and escalation.
+- `SupplierSourcingTool` for supplier scorecards, shortfall options, delay impact, price changes, alternate suppliers, and supplier failure simulation.
+
+Rules:
+- Do not send purchase orders; outbound PO sending belongs to `Operations_Controller`.
+- Distinguish requested dates from supplier-confirmed dates.
+- Never mark an order complete when received quantity is below the confirmed quantity.
+- Follow-up messages are drafts only; they require human approval before sending.
+- Cite PO IDs, quantities, dates, and financial exposure.
+""",
+            "tools": [
+                "PurchaseOrderLifecycleTool",
+                "SupplierSourcingTool"
+            ],
+            "command": "Manage supplier confirmations, exceptions, receipts, and sourcing alternatives"
+        },
+
+        # =========================================================================
+        # 6. Multi-Location Fulfillment Agent
+        # =========================================================================
+        {
+            "name": "Network_Fulfillment_Analyst",
+            "function": {
+                "description": "Specialist agent for multi-location inventory and order fulfillment: transfer versus buy decisions, location stockout risk, excess-to-shortage transfers, in-transit timing, channel sellability, allocation conflicts, redistribution, and fulfillment-center closure.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "Question about transfers, location availability, channel sellability, allocations, redistribution, or closure."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to focus the analysis."
+                        },
+                        "order_id": {
+                            "type": "string",
+                            "description": "Optional customer order identifier."
+                        },
+                        "location_id": {
+                            "type": "string",
+                            "description": "Optional location identifier."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Multi-Location Fulfillment Analyst.
+Use `NetworkFulfillmentTool` for every answer:
+- fulfill_options to compare transfer fulfillment with buying more stock.
+- location_stockout_risk to rank locations by runout date.
+- transfer_candidates to find excess stock that can cover a shortage.
+- in_transit to reconcile transfer records and expected arrivals.
+- sellability_check to explain why physical stock is not sellable online.
+- allocation_conflicts to find unsafe or over-allocated orders.
+- redistribute_plan to simulate pre-positioning before a sale.
+- closure_simulation to model a temporary fulfillment-center closure.
+
+Always report location IDs, usable units, transfer lead time, transfer cost, capacity, and the proposed safe resolution. Never promise that a transfer has executed; transfers are plans until approved.
+""",
+            "tools": [
+                "NetworkFulfillmentTool",
+                "InventoryReconciliationTool",
+                "DemandForecastTool"
+            ],
+            "command": "Analyze multi-location fulfillment, transfers, channel sellability, and allocation conflicts"
+        },
+
+        # =========================================================================
+        # 7. Quality Control & Recall Agent
+        # =========================================================================
+        {
+            "name": "Quality_Control_Analyst",
+            "function": {
+                "description": "Specialist agent for inventory quality and integrity: unexpected stock changes, cycle-count priority, damaged/quarantined/expired stock, expiry risk, return disposition, recurring discrepancies, quality signals, and recall exposure.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "Question about variances, counts, damage, expiry, returns, quality, or recalls."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to focus the investigation."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Quality Control and Recall Analyst.
+Use `InventoryQualityTool` for every answer:
+- explain_variance for unexpected stock changes and ledger evidence.
+- cycle_count_priority for physical count prioritization.
+- unsellable_summary for damaged, quarantined, expired, and recalled stock.
+- expiry_risk for near-expiry batches and projected waste.
+- return_disposition for restock, inspection, quarantine, or supplier-claim routing.
+- recurring_discrepancy for repeated variance patterns.
+- quality_signals for suspected supplier or product quality issues.
+- recall_check for recall and blocked-stock exposure.
+
+Critical rule: a positive inventory quantity never makes a batch sellable. Check quality status, expiry, recall, reservation, and channel eligibility first. Preserve the audit trail and never claim a recall block was executed without confirmation.
+""",
+            "tools": [
+                "InventoryQualityTool",
+                "ReturnPipelineTool",
+                "InventoryReconciliationTool"
+            ],
+            "command": "Investigate quality, expiry, recalls, returns, cycle counts, and recurring discrepancies"
+        },
+
+        # =========================================================================
+        # 8. Daily Operations Controller
+        # =========================================================================
+        {
+            "name": "Operations_Controller",
+            "function": {
+                "description": "Specialist agent for daily operations and accountability: prioritized exception queue, changes since yesterday, pending approvals, recommendation changes, integration health, idempotent PO drafts, approval-gated sends, reversals, recommendation explanations, and action status.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "Question about daily priorities, changes, approvals, integrations, PO sending, reversals, or task status."
+                        },
+                        "task_id": {
+                            "type": "string",
+                            "description": "Optional task or action identifier."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Daily Operations Controller.
+Use `OperationsControlTool` for every answer:
+- daily_exception_queue for the most urgent inventory problems today.
+- change_since_yesterday for material inventory and operational changes.
+- pending_approvals for approval age and escalation.
+- recommendation_history for why an earlier recommendation changed.
+- integration_health for stale APIs and safe-mode restrictions.
+- create_po_draft for an idempotent purchase-order draft.
+- send_po only when approval, spend limit, and integration health all pass.
+- reverse_action for supported compensating actions with an audit trail.
+- explain_recommendation for evidence, constraints, assumptions, alternatives, and trade-offs.
+- action_status for action-by-action completion and failure evidence.
+
+Guardrails: no external side effects, no sending without approval, no deletion of audit history, and no claim of success before a completed audit record.
+When the merchant provides valid line items and a budget, create the PO draft immediately; do not ask for permission to draft. Sending still requires a separate approval.
+When the inquiry asks to send a PO, call `OperationsControlTool` with action `send_po` and the PO ID before any other action. Use exactly {"action": "send_po", "po_id": "PO-2026-1006"}; do not put send_po in action_id and do not call action_status first. After the call, report its sent/blocked status directly; do not let a generic action_status result override the send result.
+The marketplace API being down blocks marketplace listing, sync, and recall actions; it does not block an email PO send. Only the email integration gates `send_po`.
+""",
+            "tools": [
+                "OperationsControlTool",
+                "PurchaseOrderDraftTool",
+                "PurchaseOrderLifecycleTool"
+            ],
+            "command": "Run daily exception management, approvals, integrations, PO sends, reversals, and audit status"
+        },
+
+        # =========================================================================
+        # 9. Portfolio Risk Strategist Agent
+        # =========================================================================
+        {
+            "name": "Portfolio_Strategist",
+            "function": {
+                "description": "Specialist agent that performs ABC/XYZ portfolio segmentation, identifying high-value revenue drivers (Class A) vs. erratic long-tail SKUs (Class Z), and establishes segment-specific supply chain strategies.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "Query regarding portfolio segmentation, revenue contribution, or demand predictability."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Portfolio Risk Strategist Agent.
+Your role is segmenting the catalog into ABC (revenue contribution: 80/15/5%) and XYZ (demand predictability: CV < 0.5, 0.5-1.0, >= 1.0) matrices.
+Always call `ABCClassificationTool` to retrieve authoritative catalog segmentation.
+
+Strategic Matrix:
+- AX (High Revenue, Predictable): Automate replenishment with tight Just-In-Time buffer.
+- AZ (High Revenue, Erratic): Protect with dynamic stochastic safety stock.
+- CX / CY (Low Revenue, Predictable/Variable): Consolidate into infrequent bulk orders.
+- CZ (Low Revenue, Erratic): Evaluate for discontinuation, clearance, or dropship-only fulfillment.
+""",
+            "tools": [
+                "ABCClassificationTool"
+            ],
+            "command": "Perform ABC/XYZ catalog segmentation and define strategic inventory policies"
+        },
+
+        # =========================================================================
+        # 6. Supply Chain Scenario Simulator Agent
+        # =========================================================================
+        {
+            "name": "Scenario_Simulator",
+            "function": {
+                "description": "Specialist agent that conducts 'what-if' planning: demand and lead-time shocks, budget cuts, discontinuations, wholesale orders, seasonal plans, service-versus-cost trade-offs, and supplier failure.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "inquiry": {
+                            "type": "string",
+                            "description": "The merchant's actual scenario question. This is authoritative and must be read before choosing a tool."
+                        },
+                        "lead_time_shock_days": {
+                            "type": "number",
+                            "description": "Additional delay days added to supplier delivery times (e.g. 5, 7, 14)."
+                        },
+                        "demand_surge_percent": {
+                            "type": "number",
+                            "description": "Percentage increase in consumer sales demand (e.g. 20, 50, 100)."
+                        },
+                        "target_sku": {
+                            "type": "string",
+                            "description": "Optional SKU to isolate."
+                        }
+                    },
+                    "required": ["inquiry"]
+                }
+            },
+            "instructions": """
+You are the Supply Chain Scenario Simulator Agent.
+Read the inquiry first; it is authoritative. Choose the scenario action from the inquiry, not from a generic command.
+Your role is stress-testing inventory resilience against external disruptions: factory shutdowns, port strikes, customs delays, and sudden viral flash sales.
+Always call `ScenarioSimulationTool` for lead-time and demand stress tests.
+Call `PlanningScenarioTool` for demand surges, lead-time doubling, budget cuts, discontinuations, wholesale orders, seasonal plans, service-versus-cost trade-offs, and supplier failure.
+If the inquiry asks what happens to service levels when inventory is reduced by a percentage, call `PlanningScenarioTool` with action `service_level_simulation` and do not call `ScenarioSimulationTool`.
+Use `DemandForecastTool` when the question requires a forecast baseline, confidence, or a demand-change explanation.
+State the scenario assumptions and present projections as estimates, not facts.
+
+When reporting simulation findings:
+- Identify the first SKU that will fail / collapse to zero stock.
+- Report total projected lost GMV (revenue at risk) and lost gross profit.
+- Detail the exact stockout gap and recommend emergency buffer quantities needed to prevent catastrophic stockout.
+""",
+            "tools": [
+                "ScenarioSimulationTool",
+                "PlanningScenarioTool",
+                "DemandForecastTool"
+            ],
+            "command": "Execute supply chain stress simulation and what-if disruption modeling"
+        },
+
+        # =========================================================================
+        # Coded Tools (Deterministic Computational Engines)
+        # =========================================================================
+
+        # Tool 1: Inventory Analytics Engine
+        {
+            "name": "InventoryAnalyticsTool",
+            "class": "coded_tools.inventory_ops.inventory_analytics_tool.InventoryAnalyticsTool",
+            "function": {
+                "description": "Analyzes catalog inventory, calculates uncensored sales velocity, filters outlier bulk orders, days-of-supply, and flags stockout risk levels.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to filter analysis for. If omitted or 'ALL', evaluates all products."
+                        }
+                    }
+                }
+            }
+        },
+
+        # Tool 2: Supplier Constraints Engine
+        {
+            "name": "SupplierConstraintsTool",
+            "class": "coded_tools.inventory_ops.supplier_constraints_tool.SupplierConstraintsTool",
+            "function": {
+                "description": "Validates supplier lead time, MOQ, case pack size, and rounds candidate replenishment units to supplier-compliant batch quantities.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "sku": {
+                            "type": "string",
+                            "description": "The SKU to check supplier constraints for."
+                        },
+                        "recommended_units": {
+                            "type": "integer",
+                            "description": "Raw recommended reorder quantity (will be rounded up to nearest case pack and MOQ)."
+                        }
+                    },
+                    "required": ["sku"]
+                }
+            }
+        },
+
+        # Tool 3: Knapsack Budget Optimizer
+        {
+            "name": "KnapsackBudgetOptimizerTool",
+            "class": "coded_tools.inventory_ops.knapsack_budget_optimizer_tool.KnapsackBudgetOptimizerTool",
+            "function": {
+                "description": "Optimizes working capital allocation using Bounded Knapsack to maximize gross margin protected across discrete supplier case packs within a budget ceiling.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "budget_limit": {
+                            "type": "number",
+                            "description": "Procurement capital budget cap in INR."
+                        },
+                        "min_risk_level": {
+                            "type": "string",
+                            "description": "Optional filter: 'CRITICAL', 'WARNING', or 'ALL' (default 'ALL')."
+                        }
+                    },
+                    "required": ["budget_limit"]
+                }
+            }
+        },
+
+        # Tool 4: Dead Stock Liquidation Engine
+        {
+            "name": "DeadStockLiquidationTool",
+            "class": "coded_tools.inventory_ops.dead_stock_liquidation_tool.DeadStockLiquidationTool",
+            "function": {
+                "description": "Audits slow-moving inventory (> 60 Days of Supply), calculates trapped working capital, and models clearance discount & bundling monetization strategies.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "dos_threshold": {
+                            "type": "number",
+                            "description": "Days of supply threshold to classify as excess (default 60)."
+                        },
+                        "discount_percent": {
+                            "type": "number",
+                            "description": "Proposed markdown discount percentage (default 20)."
+                        }
+                    }
+                }
+            }
+        },
+
+        # Tool 5: Supply Chain Scenario Simulator
+        {
+            "name": "ScenarioSimulationTool",
+            "class": "coded_tools.inventory_ops.scenario_simulation_tool.ScenarioSimulationTool",
+            "function": {
+                "description": "Evaluates supply chain shocks (lead time delays, demand surges) and projects stockout timeline, unfulfilled units, and lost GMV at risk.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "lead_time_shock_days": {
+                            "type": "number",
+                            "description": "Additional delay days added to supplier lead time (e.g. 5, 7, 14)."
+                        },
+                        "demand_surge_percent": {
+                            "type": "number",
+                            "description": "Percentage surge in daily customer sales (e.g. 20, 50, 100)."
+                        },
+                        "target_sku": {
+                            "type": "string",
+                            "description": "Optional target SKU to isolate."
+                        }
+                    }
+                }
+            }
+        },
+
+        # Tool 6: ABC/XYZ Portfolio Classification Engine
+        {
+            "name": "ABCClassificationTool",
+            "class": "coded_tools.inventory_ops.abc_classification_tool.ABCClassificationTool",
+            "function": {
+                "description": "Performs dual-axis ABC (revenue contribution) and XYZ (demand predictability CV) catalog segmentation with actionable replenishment strategies.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "abc_a_threshold": {
+                            "type": "number",
+                            "description": "Cumulative revenue threshold for Class A (default 0.80)."
+                        },
+                        "abc_b_threshold": {
+                            "type": "number",
+                            "description": "Cumulative revenue threshold for Class B (default 0.95)."
+                        }
+                    }
+                }
+            }
+        },
+
+        # Tool 7: Reverse Logistics & RTO Pipeline Engine
+        {
+            "name": "ReturnPipelineTool",
+            "class": "coded_tools.inventory_ops.returns_pipeline_tool.ReturnPipelineTool",
+            "function": {
+                "description": "Audits return and RTO rates, COD delivery rejections, resellable inventory in transit, and calculates True Net Sales Velocity to prevent over-ordering.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to filter return analysis."
+                        }
+                    }
+                }
+            }
+        },
+
+        # Tool 8: Supplier Reliability & Dual-Sourcing Engine
+        {
+            "name": "SupplierReliabilityTool",
+            "class": "coded_tools.inventory_ops.supplier_reliability_tool.SupplierReliabilityTool",
+            "function": {
+                "description": "Scores supplier fulfillment reliability, calculates stochastic safety stock with lead-time jitter (sigma_LT), and evaluates volume discount tiers.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to evaluate supplier performance."
+                        },
+                        "supplier_id": {
+                            "type": "string",
+                            "description": "Optional Supplier ID to audit."
+                        }
+                    }
+                }
+            }
+        },
+
+        # Tool 9: Purchase Order Drafting Engine
+        {
+            "name": "PurchaseOrderDraftTool",
+            "class": "coded_tools.inventory_ops.purchase_order_draft_tool.PurchaseOrderDraftTool",
+            "function": {
+                "description": "Generates an auditable purchase order draft in Markdown and JSON formats, verifying total spend against the merchant budget cap.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "budget_limit": {
+                            "type": "number",
+                            "description": "Procurement capital budget cap in INR."
+                        },
+                        "order_items": {
+                            "type": "array",
+                            "items": { "type": "object" },
+                            "description": "List of items to order. Each object should contain: sku, units, unit_cost, supplier_id, and sku_name."
+                        },
+                        "notes": {
+                            "type": "string",
+                            "description": "Optional notes or reason for PO issuance."
+                        }
+                    },
+                    "required": ["order_items"]
+                }
+            }
+        },
+
+        # Tool 10: Inventory Reconciliation Engine
+        {
+            "name": "InventoryReconciliationTool",
+            "class": "coded_tools.inventory_ops.inventory_reconciliation_tool.InventoryReconciliationTool",
+            "function": {
+                "description": "Reconciles warehouse, storefront, and marketplace inventory; detects stale or missing records, traces negative balances, reconciles commitments, and scores source trust.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["available_to_sell", "source_discrepancies", "data_quality", "trace_sku",
+                                     "committed_stock", "trust_report", "summary"],
+                            "description": "Reconciliation action to execute."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU for focused actions."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        },
+
+        # Tool 11: Demand Forecasting Engine
+        {
+            "name": "DemandForecastTool",
+            "class": "coded_tools.inventory_ops.demand_forecast_tool.DemandForecastTool",
+            "function": {
+                "description": "Forecasts demand with intervals and confidence, explains demand changes, classifies spikes, runs promotion scenarios, handles new products, and backtests against a seasonal-naive baseline.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["forecast", "stockout_horizon", "explain_change", "classify_spike",
+                                     "promotion_scenario", "new_product_forecast", "backtest", "reliability"],
+                            "description": "Forecasting action to execute."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU for focused actions."
+                        },
+                        "horizon_days": {
+                            "type": "integer",
+                            "description": "Forecast horizon in days (default 30)."
+                        },
+                        "uplift_percent": {
+                            "type": "number",
+                            "description": "Demand uplift for promotion scenarios."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        },
+
+        # Tool 12: Replenishment Engine
+        {
+            "name": "ReplenishmentEngineTool",
+            "class": "coded_tools.inventory_ops.replenishment_engine_tool.ReplenishmentEngineTool",
+            "function": {
+                "description": "Builds a prioritized reorder queue, forecast-based quantities, order-by dates, excess/dead-stock views, reduction trade-offs, bounded-knapsack budget allocation, order-frequency comparisons, MOQ alternatives, and automation policy.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["queue", "quantity", "order_by_date", "excess", "dead_stock",
+                                     "reduce_order", "budget_allocate", "order_frequency",
+                                     "moq_alternatives", "automation_policy"],
+                            "description": "Replenishment action to execute."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU for focused actions."
+                        },
+                        "order_quantity": {
+                            "type": "integer",
+                            "description": "Current order quantity for reduction analysis."
+                        },
+                        "budget_limit": {
+                            "type": "number",
+                            "description": "Procurement budget ceiling in INR."
+                        },
+                        "horizon_days": {
+                            "type": "integer",
+                            "description": "Analysis horizon in days."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum queue items to return."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        },
+
+        # Tool 13: Purchase-Order Lifecycle Engine
+        {
+            "name": "PurchaseOrderLifecycleTool",
+            "class": "coded_tools.inventory_ops.purchase_order_lifecycle_tool.PurchaseOrderLifecycleTool",
+            "function": {
+                "description": "Tracks purchase-order exceptions, supplier acknowledgements and confirmations, drafts approval-gated follow-ups, reconciles receipts, and lists partial fulfillment and escalations.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["exception_queue", "confirmation_status", "draft_followup",
+                                     "receipt_reconciliation", "partial_fulfillment", "escalation_queue"],
+                            "description": "Lifecycle action to execute."
+                        },
+                        "po_id": {
+                            "type": "string",
+                            "description": "Optional purchase order identifier."
+                        },
+                        "notes": {
+                            "type": "string",
+                            "description": "Optional context for a follow-up draft."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        },
+
+        # Tool 14: Supplier Sourcing Engine
+        {
+            "name": "SupplierSourcingTool",
+            "class": "coded_tools.inventory_ops.supplier_sourcing_tool.SupplierSourcingTool",
+            "function": {
+                "description": "Scores supplier reliability from receipts, evaluates short shipments, delay impact, price changes, alternate suppliers, and supplier failure scenarios.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["supplier_scorecard", "shortfall_options", "delay_impact",
+                                     "price_change_eval", "alternate_suppliers", "supplier_failure_sim"],
+                            "description": "Sourcing action to execute."
+                        },
+                        "supplier_id": {
+                            "type": "string",
+                            "description": "Optional supplier identifier."
+                        },
+                        "po_id": {
+                            "type": "string",
+                            "description": "Optional purchase order identifier."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU for alternate sourcing."
+                        },
+                        "quantity": {
+                            "type": "integer",
+                            "description": "Quantity needed for alternate sourcing."
+                        },
+                        "available_qty": {
+                            "type": "integer",
+                            "description": "Supplier-confirmed available quantity for shortfall analysis."
+                        },
+                        "delay_days": {
+                            "type": "integer",
+                            "description": "Supplier delay in days."
+                        },
+                        "new_unit_cost": {
+                            "type": "number",
+                            "description": "Revised unit cost for price-change analysis."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        }
+
+        # Tool 15: Multi-Location Fulfillment Engine
+        {
+            "name": "NetworkFulfillmentTool",
+            "class": "coded_tools.inventory_ops.network_fulfillment_tool.NetworkFulfillmentTool",
+            "function": {
+                "description": "Compares transfer fulfillment with buying stock, ranks location stockout risk, finds excess-to-shortage transfers, reconciles in-transit transfers, explains channel sellability, detects allocation conflicts, simulates redistribution, and models fulfillment-center closure.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["fulfill_options", "location_stockout_risk", "transfer_candidates",
+                                     "in_transit", "sellability_check", "allocation_conflicts",
+                                     "redistribute_plan", "closure_simulation"],
+                            "description": "Multi-location action to execute."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to focus the analysis."
+                        },
+                        "quantity": {
+                            "type": "integer",
+                            "description": "Order or transfer quantity."
+                        },
+                        "order_id": {
+                            "type": "string",
+                            "description": "Optional customer order identifier."
+                        },
+                        "location_id": {
+                            "type": "string",
+                            "description": "Optional location identifier."
+                        },
+                        "destination_location_id": {
+                            "type": "string",
+                            "description": "Optional destination location for fulfillment."
+                        },
+                        "channel": {
+                            "type": "string",
+                            "description": "Optional sales channel for sellability analysis."
+                        },
+                        "horizon_days": {
+                            "type": "integer",
+                            "description": "Planning horizon in days."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        },
+
+        # Tool 16: Inventory Quality & Recall Engine
+        {
+            "name": "InventoryQualityTool",
+            "class": "coded_tools.inventory_ops.inventory_quality_tool.InventoryQualityTool",
+            "function": {
+                "description": "Explains stock variances, prioritizes cycle counts, separates usable and unusable batches, models expiry waste, routes returns, detects recurring discrepancies, groups quality signals, and checks recall exposure.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["explain_variance", "cycle_count_priority", "unsellable_summary",
+                                     "expiry_risk", "return_disposition", "recurring_discrepancy",
+                                     "quality_signals", "recall_check"],
+                            "description": "Quality action to execute."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to focus the investigation."
+                        },
+                        "location_id": {
+                            "type": "string",
+                            "description": "Optional location identifier."
+                        },
+                        "return_id": {
+                            "type": "string",
+                            "description": "Optional return identifier."
+                        },
+                        "channel": {
+                            "type": "string",
+                            "description": "Optional channel for recall exposure."
+                        },
+                        "horizon_days": {
+                            "type": "integer",
+                            "description": "Expiry horizon in days."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum items to return."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        },
+
+        # Tool 17: Inventory Finance Engine
+        {
+            "name": "InventoryFinanceTool",
+            "class": "coded_tools.inventory_ops.inventory_finance_tool.InventoryFinanceTool",
+            "function": {
+                "description": "Calculates inventory capital, gross and net profit, carrying cost, stockout impact, budget-versus-hold trade-offs, supplier landed-cost impact, service-level scenarios, and policy savings with explicit assumptions.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["capital_tied_up", "gross_profit_ranking", "excess_carrying_cost",
+                                     "stockout_impact", "budget_vs_hold", "supplier_cost_impact",
+                                     "service_level_simulation", "policy_savings"],
+                            "description": "Finance action to execute."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to focus the analysis."
+                        },
+                        "horizon_days": {
+                            "type": "integer",
+                            "description": "Analysis horizon in days."
+                        },
+                        "period_days": {
+                            "type": "integer",
+                            "description": "Carrying-cost or policy period in days."
+                        },
+                        "budget_limit": {
+                            "type": "number",
+                            "description": "Budget ceiling in INR."
+                        },
+                        "reduction_percent": {
+                            "type": "number",
+                            "description": "Inventory reduction percentage for service-level simulation."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        },
+
+        # Tool 18: Planning Scenario Engine
+        {
+            "name": "PlanningScenarioTool",
+            "class": "coded_tools.inventory_ops.planning_scenario_tool.PlanningScenarioTool",
+            "function": {
+                "description": "Simulates demand changes, lead-time shocks, budget cuts, slow-product discontinuation, wholesale orders, seasonal plans, service-versus-cost trade-offs, and complete supplier failure.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["demand_surge", "lead_time_double", "budget_cut",
+                                     "discontinue_slow", "wholesale_order", "seasonal_plan",
+                                     "service_vs_cost", "service_level_simulation", "supplier_failure"],
+                            "description": "Planning action to execute."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to focus the scenario."
+                        },
+                        "supplier_id": {
+                            "type": "string",
+                            "description": "Supplier identifier for failure simulation."
+                        },
+                        "quantity": {
+                            "type": "integer",
+                            "description": "Wholesale order quantity."
+                        },
+                        "horizon_days": {
+                            "type": "integer",
+                            "description": "Planning horizon in days."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum items to return."
+                        },
+                        "demand_change_percent": {
+                            "type": "number",
+                            "description": "Demand change percentage."
+                        },
+                        "lead_time_multiplier": {
+                            "type": "number",
+                            "description": "Lead-time multiplier."
+                        },
+                        "budget_change_percent": {
+                            "type": "number",
+                            "description": "Budget change percentage."
+                        },
+                        "budget_limit": {
+                            "type": "number",
+                            "description": "Budget ceiling in INR."
+                        },
+                        "uplift_percent": {
+                            "type": "number",
+                            "description": "Seasonal demand uplift percentage."
+                        },
+                        "reduction_percent": {
+                            "type": "number",
+                            "description": "Inventory reduction percentage for service-level simulation."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        },
+
+        # Tool 19: Operations Control & Audit Engine
+        {
+            "name": "OperationsControlTool",
+            "class": "coded_tools.inventory_ops.operations_control_tool.OperationsControlTool",
+            "function": {
+                "description": "Builds the daily exception queue, summarizes changes, tracks approvals, explains recommendation changes, checks integration health, creates idempotent PO drafts, gates PO sends, creates reversals, explains recommendations, and reports action status.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["daily_exception_queue", "change_since_yesterday", "pending_approvals",
+                                     "recommendation_history", "integration_health", "create_po_draft",
+                                     "send_po", "reverse_action", "explain_recommendation", "action_status"],
+                            "description": "Operations action to execute."
+                        },
+                        "sku": {
+                            "type": "string",
+                            "description": "Optional SKU to focus the analysis."
+                        },
+                        "order_items": {
+                            "type": "array",
+                            "items": { "type": "object" },
+                            "description": "PO line items with sku, quantity, optional unit_cost, supplier_name, and lead_time_days."
+                        },
+                        "budget_limit": {
+                            "type": "number",
+                            "description": "PO budget ceiling in INR."
+                        },
+                        "notes": {
+                            "type": "string",
+                            "description": "Optional PO draft notes."
+                        },
+                        "idempotency_key": {
+                            "type": "string",
+                            "description": "Optional idempotency key for PO draft replay."
+                        },
+                        "po_id": {
+                            "type": "string",
+                            "description": "Purchase order identifier."
+                        },
+                        "approval_id": {
+                            "type": "string",
+                            "description": "Optional approval task identifier."
+                        },
+                        "action_id": {
+                            "type": "string",
+                            "description": "Action identifier for reversal or status."
+                        },
+                        "reference_id": {
+                            "type": "string",
+                            "description": "Optional reference identifier for status."
+                        },
+                        "recommendation_id": {
+                            "type": "string",
+                            "description": "Optional recommendation identifier."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum items to return."
+                        }
+                    },
+                    "required": ["action"]
+                }
+            }
+        }
+    ]
+}
