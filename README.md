@@ -115,13 +115,17 @@ python -m unittest tests.test_advanced_inventory_ops tests.test_inventory_reconc
   tests.test_inventory_quality_tool tests.test_inventory_finance_tool \
   tests.test_planning_scenario_tool tests.test_operations_control_tool \
   tests.test_extended_data_contract
+
+# Run all 86 unit and data-contract tests
+PYTHONPATH=. python -m unittest tests/test_*.py
 ```
 
 All data in `data/` is synthetic and contains no personal or confidential information. Marketplace,
 email, and ERP actions are simulated locally; PO sends remain blocked until approval, spend limit,
 and integration health all pass. See [`architecture.md`](architecture.md),
-[`summary.md`](summary.md), and
-[`docs/inventory_ops_question_coverage.md`](docs/inventory_ops_question_coverage.md).
+[`architecture_v2.md`](architecture_v2.md), [`summary.md`](summary.md),
+[`docs/inventory_ops_question_coverage.md`](docs/inventory_ops_question_coverage.md), and
+[`docs/known_limitations.md`](docs/known_limitations.md).
 
 ---
 

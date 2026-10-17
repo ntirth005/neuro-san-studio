@@ -5,11 +5,13 @@
 Small and medium e-commerce sellers make inventory decisions with incomplete, conflicting data.
 Stock figures disagree between the warehouse, storefront, and marketplace; demand is seasonal or
 spiky; supplier lead times vary; purchasing budgets are limited; some stock is damaged, expired,
-or recalled; and every recommendation has to survive finance and approval scrutiny.
+or recalled; and every recommendation has to survive finance and approval scrutiny. The initial
+target is sellers with frequent supplier and inventory exceptions, not enterprises with a fully
+integrated ERP.
 
-A spreadsheet can calculate a reorder point, but it cannot reconcile sources, explain uncertainty,
-enforce supplier constraints, route returns, protect sellable inventory from recall exposure,
-compare financial trade-offs, or keep an audit trail of what the agent did and why.
+A spreadsheet alone can calculate a reorder point, but it cannot reconcile sources, explain
+uncertainty, enforce supplier constraints, route returns, protect sellable inventory from recall
+exposure, compare financial trade-offs, or keep an audit trail of what the agent did and why.
 
 ## What we built
 
@@ -73,6 +75,13 @@ The LLM is not the calculator. Every numeric result comes from a deterministic P
   explains recommendation changes, checks integration health, creates idempotent PO drafts, gates
   PO sends, creates compensating reversals, explains recommendations, and reports action status.
 
+Supporting tools cover baseline positions and velocity (`InventoryAnalyticsTool`), return/RTO
+offsets (`ReturnPipelineTool`), ABC/XYZ segmentation (`ABCClassificationTool`), supplier
+constraints and reliability (`SupplierConstraintsTool`, `SupplierReliabilityTool`), budget
+optimization (`KnapsackBudgetOptimizerTool`), dead-stock liquidation
+(`DeadStockLiquidationTool`), PO drafting (`PurchaseOrderDraftTool`), and scenario stress tests
+(`ScenarioSimulationTool`).
+
 The agents do what LLMs are good at: select the right tool, interpret the result, explain the
 trade-off, and cite the evidence. The tools do what LLMs are bad at: arithmetic, state
 transitions, policy enforcement, and reproducibility.
@@ -80,7 +89,7 @@ transitions, policy enforcement, and reproducibility.
 ## What makes it stand out
 
 1. **Deterministic truth.** Quantities, dates, costs, and confidence intervals are computed in
-   Python. The same data produces the same result.
+   Python. The same data and tool inputs produce the same numeric result.
 2. **Uncertainty is visible.** Forecasts include intervals, confidence tiers, and backtest error
    instead of a single falsely precise number.
 3. **Conflicts are surfaced.** The integrity agent reports stale sources, negative inventory, and
@@ -93,32 +102,28 @@ transitions, policy enforcement, and reproducibility.
    receipts, price changes, approvals, sends, reversals, and audit status.
 7. **Operations are accountable.** Daily exceptions are ranked, approvals escalate by SLA, and
    every action is reported as completed, failed, pending, or blocked.
-8. **Token-efficient delegation.** One specialist hop per question, compact tool outputs, top-N
-   issue lists, and no raw CSV rows in prompts.
+8. **Token-efficient delegation.** One specialist hop per question wherever possible, compact tool
+   outputs, top-N issue lists, and no raw CSV rows in prompts.
 9. **Human approval is enforced outside the LLM.** Follow-up messages are drafts; PO sends are
    blocked without an approved task and a healthy integration.
 
 ## Demo flow
 
-1. Ask for stock visibility: the integrity agent shows one SKU where the storefront claims more
-   units than the warehouse, and one marketplace record that is stale.
-2. Ask why an SKU is negative: the ledger trace identifies the overselling events.
-3. Ask which SKUs will run out in 14 days: the demand agent returns a ranked list with lost-GMV
-   exposure and confidence.
-4. Ask what to reorder under INR 30,000: the replenishment engine returns a compliant queue and a
-   bounded-knapsack allocation.
-5. Ask whether an order can be fulfilled from another warehouse: the network agent compares
-   transfer cost and timing against a new purchase.
-6. Ask which stock is damaged, near expiry, or recalled: the quality agent separates usable and
-   unusable units and flags channel exposure.
-7. Ask how much cash is tied up and what happens to service levels after a 10% inventory
-   reduction: the finance agent shows the basis and the service-level trade-off.
-8. Ask what happens if demand rises 20% or a supplier fails: the scenario agent returns shortages,
-   purchase needs, and contingency options.
-9. Ask for the five most urgent problems today: the operations agent ranks the queue and
-   escalates overdue approvals.
-10. Ask to create a PO draft and send it: the draft is idempotent, and the send is blocked until
-    approval, spend limit, and integration health all pass.
+1. Reconcile warehouse, storefront, and marketplace stock, then trace a negative SKU.
+2. Forecast 14-day runout and build a reorder queue under INR 30,000.
+3. Compare a warehouse transfer with a new purchase for a customer order.
+4. Separate damaged, quarantined, expired, and recalled stock.
+5. Show cash tied up and the service-level impact of a 10% inventory reduction.
+6. Simulate demand rising 20% and a complete supplier failure.
+7. Rank the daily exception queue and create/send a PO through the approval gate.
+
+## Validation
+
+- **86 unit and data-contract tests pass** across 12 modules.
+- HOCON validation passes for `registries/inventory_ops.hocon`.
+- **80 questions across nine domains** are mapped in `docs/inventory_ops_question_coverage.md`.
+- Live smoke tests cover location, quality, finance, scenario, operations, and PO-send guardrails.
+- The demo uses deterministic synthetic CSV data, so judges can reproduce the same results.
 
 ## Impact
 
@@ -127,6 +132,9 @@ reduce manual reconciliation time, expose stockouts earlier, avoid over-ordering
 channel data, enforce supplier constraints automatically, prevent unsafe sale of recalled stock,
 ground financial decisions in explicit assumptions, and make every recommendation auditable.
 
+Commercially, the path is subscription software priced per store or per operations seat: land on
+supplier exception handling, then expand into end-to-end inventory operations.
+
 ## Limitations and next steps
 
 - All data is synthetic; marketplace, email, and ERP integrations are simulated locally.
@@ -134,3 +142,12 @@ ground financial decisions in explicit assumptions, and make every recommendatio
 - Follow-ups are drafted locally and PO sends are simulated; no external message is transmitted.
 - Next: live Shopify/Amazon adapters, scheduler-driven alerts, real email/WhatsApp approval
   workflows, and evaluation against a seller's existing process.
+
+## Repository references
+
+- `architecture.md` — judge-facing architecture description.
+- `architecture_v2.md` — technical architecture with Mermaid/UML diagrams.
+- `docs/inventory_ops_question_coverage.md` — all 80 questions mapped to agents and tools.
+- `docs/known_limitations.md` — detailed boundary audit and unsolved edge cases.
+- `README.md` — setup, run, validate, and test instructions.
+- `requirements.txt` — Python dependencies.

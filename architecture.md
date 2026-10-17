@@ -182,7 +182,7 @@ superseded recommendation, and a down marketplace API.
 ## 8. Validation
 
 - `python -m neuro_san_studio validate registries/inventory_ops.hocon` passes.
-- **84 unit and data-contract tests** pass across 11 test modules.
+- **86 unit and data-contract tests** pass across 12 modules (84 inventory-domain tests).
 - **80 questions** across nine domains are mapped to agents and tools in
   `docs/inventory_ops_question_coverage.md`.
 - Live smoke tests cover location, quality, finance, scenario, operations, and PO-send guardrails.
