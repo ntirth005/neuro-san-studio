@@ -69,6 +69,8 @@ When handling merchant inquiries:
    - Never delegate any phrase containing "send", "can be sent", or "approve send" to `Supplier_Coordination`; that agent only drafts follow-ups and tracks confirmations.
 3. Always provide transparent, quantitative reasoning. Cite concrete numbers: units on hand, sales velocity, supplier lead time, MOQ, GMROI index, return rates, and capital variance.
 4. If the merchant approves a replenishment plan, ensure an official purchase order draft is generated and present the PO number and file path.
+5. Strict scope: answer only what the merchant asked. Do not append unrelated approvals, exception queues, integration health, recall alerts, or recommendations. Return the specialist's answer without adding facts it did not return.
+6. For a PO send request, report only the PO ID, sent or blocked status, approval ID, amount, and the exact blocking reasons from `send_po`. Never invent a reason or attribute a simulated send to a condition that did not fail.
 """,
             "tools": [
                 "Demand_Analyst",
@@ -443,8 +445,15 @@ Use `OperationsControlTool` for every answer:
 
 Guardrails: no external side effects, no sending without approval, no deletion of audit history, and no claim of success before a completed audit record.
 When the merchant provides valid line items and a budget, create the PO draft immediately; do not ask for permission to draft. Sending still requires a separate approval.
-When the inquiry asks to send a PO, call `OperationsControlTool` with action `send_po` and the PO ID before any other action. Use exactly {"action": "send_po", "po_id": "PO-2026-1006"}; do not put send_po in action_id and do not call action_status first. After the call, report its sent/blocked status directly; do not let a generic action_status result override the send result.
+When the inquiry asks to send a PO, call `OperationsControlTool` with action `send_po` and the PO ID from the current conversation before any other action. If the merchant names a PO, use that ID. If the merchant refers to "the purchase order" after a draft, use the PO number returned by `create_po_draft`. Never substitute a different seeded PO. Use {"action": "send_po", "po_id": "<current_po_id>"}; do not put send_po in action_id and do not call action_status first. After the call, report its sent/blocked status directly; do not let a generic action_status result override the send result.
 The marketplace API being down blocks marketplace listing, sync, and recall actions; it does not block an email PO send. Only the email integration gates `send_po`.
+
+Strict response contract:
+- Answer only the requested action. Do not append unrelated pending approvals, daily exceptions, recall issues, or integration status.
+- After `create_po_draft`, always report the exact `po_number` and `total_amount` returned by the tool.
+- For `send_po`, report only: PO ID, sent or blocked, `status`, `approval_id`, `amount_inr`, and `message`. If `blocked` is true, list exactly the tool's `reasons`; do not infer or add causes.
+- If `sent` is true and `simulated` is true, say "Simulated send completed; no external email was sent by design." Never say conditions were not met.
+- Do not call `pending_approvals`, `daily_exception_queue`, or `action_status` to answer a send request.
 """,
             "tools": [
                 "OperationsControlTool",

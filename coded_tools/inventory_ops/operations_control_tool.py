@@ -549,9 +549,28 @@ class OperationsControlTool(CodedTool):
         if not po_id:
             return {"error": "send_po requires a po_id"}
         po = next((row for row in self.store.load("purchase_orders.csv") if row.get("po_id") == po_id), None)
-        if not po:
+        draft_action = next(
+            (
+                action
+                for action in self._all_actions()
+                if action.get("action_type") == "po_draft"
+                and action.get("reference_id") == po_id
+                and action.get("status") == "completed"
+            ),
+            None,
+        )
+        if not po and not draft_action:
             return {"error": f"Purchase order {po_id} not found"}
-        amount = self.store.to_float(po.get("requested_qty")) * self.store.to_float(po.get("unit_cost"))
+        if po:
+            amount = self.store.to_float(po.get("requested_qty")) * self.store.to_float(po.get("unit_cost"))
+        else:
+            draft = draft_action.get("result") or {}
+            amount = self.store.to_float(draft.get("total_amount"))
+            if amount <= 0:
+                amount = sum(
+                    self.store.to_float(item.get("quantity")) * self.store.to_float(item.get("unit_cost"))
+                    for item in draft.get("items", [])
+                )
         approval_id = self.store.normalize_optional(args.get("approval_id"))
         approvals = self.store.approvals()
         approval = None
@@ -618,9 +637,11 @@ class OperationsControlTool(CodedTool):
                     "idempotent_replay": True,
                     "status": "sent_simulated",
                     "po_id": po_id,
+                    "amount_inr": round(amount, 2),
+                    "approval_id": approval.get("task_id") if approval else None,
                     "message": (
                         "This PO already has a completed simulated send in the audit log; "
-                        "no duplicate send was performed."
+                        "no duplicate send was performed and no external email was transmitted."
                     ),
                     "prior_action": action,
                 }
