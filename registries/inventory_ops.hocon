@@ -16,7 +16,7 @@
             "Which purchase orders are overdue for supplier confirmation?",
             "The supplier can only ship 7 of 12 units. What are my options?",
             "Can I fulfil order ORD-LOC-9001 from another warehouse instead of buying more stock?",
-            "Which locations will run out first, and where is excess stock that could cover a shortage?",
+            "Which locations will run out first for SKU-001?",
             "Which products need a physical stock count, and how much stock is damaged, quarantined, or near expiry?",
             "Are we selling stock that should be recalled or blocked?",
             "How much cash is tied up in inventory, and which products generate the most gross profit?",
@@ -361,6 +361,9 @@ Strict rules:
 - Never recommend transferring out of a location that the tool marks as a deficit location.
 - A transfer can cover a shortage only when the SKU matches. If the only excess rows are for a different SKU, do not list them as candidates; state that no same-SKU excess stock is available.
 - For a general "where is excess stock that could cover a shortage?" question, call `redistribute_plan` and report only same-SKU `recommendations`.
+- If no same-SKU surplus exists, explicitly state "No excess <SKU> stock is available to cover the shortage." Do not recommend moving stock from a location that has no surplus.
+- Excess stock must come only from `transfer_candidates.candidates` or `redistribute_plan.recommendations`. Never treat total on-hand or available-to-sell units as excess; if `candidates` is empty, stop after saying no excess exists.
+- Do not add reconciliation, reservation, or allocation-conflict findings unless the question asks for them.
 """,
             "tools": [
                 "NetworkFulfillmentTool",
