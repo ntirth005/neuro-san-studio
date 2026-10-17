@@ -32,18 +32,20 @@ orchestrate, explain, and cite evidence.
 
 ## 2. Agent topology
 
-```
-                              Inventory_Lead
-                                    |
-   +-------------+-------------+----+----+-------------+-------------+-------------+
-   |             |             |         |             |             |             |
-Demand      Inventory     Supplier   Capital      Supplier      Network       Quality
-Analyst     Integrity     Specialist Risk         Coordination  Fulfillment   Control
-            Analyst                  Auditor                    Analyst       Analyst
-   |             |             |         |             |             |             |
-...         ...           ...       ...           ...           ...           ...
+The network has **11 agents** and **19 deterministic tools**.
 
-                    Operations_Controller       Portfolio_Strategist   Scenario_Simulator
+```
+Inventory_Lead
+├── Demand_Analyst
+├── Inventory_Integrity_Analyst
+├── Supplier_Specialist
+├── Capital_Risk_Auditor
+├── Supplier_Coordination
+├── Network_Fulfillment_Analyst
+├── Quality_Control_Analyst
+├── Operations_Controller
+├── Portfolio_Strategist
+└── Scenario_Simulator
 ```
 
 - **Inventory_Lead** is the only front man. It routes by intent and synthesizes the answer.
@@ -51,7 +53,7 @@ Analyst     Integrity     Specialist Risk         Coordination  Fulfillment   Co
 - **Inventory_Integrity_Analyst** owns reconciliation, freshness, negative balances, and trust.
 - **Supplier_Specialist** owns contract terms, MOQ, lead-time variance, and vendor reliability.
 - **Capital_Risk_Auditor** owns replenishment, budget allocation, financial reasoning, and
-  purchase-order proposals.
+  purchase-order funding proposals.
 - **Supplier_Coordination** owns confirmations, delays, short receipts, and alternates.
 - **Network_Fulfillment_Analyst** owns multi-location fulfillment, transfers, channel
   sellability, allocation conflicts, redistribution, and closure planning.
@@ -177,7 +179,17 @@ physical-but-not-sellable SKU, an over-allocated order, damaged/quarantined/expi
 batches, a recurring SKU variance, a supplier landed-cost outlier, an overdue approval, a
 superseded recommendation, and a down marketplace API.
 
-## 8. Limitations
+## 8. Validation
+
+- `python -m neuro_san_studio validate registries/inventory_ops.hocon` passes.
+- **84 unit and data-contract tests** pass across 11 test modules.
+- **80 questions** across nine domains are mapped to agents and tools in
+  `docs/inventory_ops_question_coverage.md`.
+- Live smoke tests cover location, quality, finance, scenario, operations, and PO-send guardrails.
+- The demo is checked with `python -m unittest` and deterministic CSV data; no live seller data is
+  used.
+
+## 9. Limitations
 
 - Data is synthetic; marketplace, email, and ERP integrations are simulated locally.
 - Forecasting uses a lightweight deterministic statistical engine, not a trained ML service.
@@ -185,3 +197,9 @@ superseded recommendation, and a down marketplace API.
 - The demo does not include a production database, authentication, or tenant isolation.
 - Demand history is simulated for 180 days; real sellers must supply their own exports.
 - Real-world integration adapters are the next step, not part of this build.
+
+The full boundary audit is in `docs/known_limitations.md`. It covers the gaps this MVP does not
+close yet: joint multi-echelon optimization, simultaneous budget/CBM/weight/pallet constraints,
+intermittent-demand bias correction, residual-shelf-life rejection rules, physical return grading,
+supplier minimum order value and freight brackets, GST/FX/early-payment modeling, ACID transactions,
+live API execution, and sub-200 ms checkout allocation.
