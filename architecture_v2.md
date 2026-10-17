@@ -14,7 +14,7 @@ The architecture is deliberately split into three layers:
 
 1. **Agent layer** — 11 LLM agents for intent, routing, explanation, and synthesis.
 2. **Deterministic layer** — 19 CodedTools for arithmetic, policy checks, and local state changes.
-3. **Data layer** — 39 synthetic CSV snapshots accessed through one shared `InventoryDataStore`.
+3. **Data layer** — 38 synthetic CSV snapshots accessed through one shared `InventoryDataStore`.
 
 This separation is the core design decision. The LLM is good at interpreting an ambiguous question
 and explaining a trade-off. It is not trusted to compute stock positions, approve spend, or invent
@@ -550,17 +550,19 @@ flowchart TB
 - **Data-contract tests:** required columns, anomaly fixtures, reference-time coverage.
 - **HOCON validation:** `python -m neuro_san_studio validate registries/inventory_ops.hocon`.
 - **Live smoke tests:** location, quality, finance, scenario, operations, PO draft/send.
-- **Current suite:** 84 tests across 11 modules.
+- **Current suite:** 84 inventory domain tests across 11 modules (86 tests across 12 modules including dependency hygiene).
 
 ```bash
 source venv/bin/activate
 python -m neuro_san_studio validate registries/inventory_ops.hocon
-python -m unittest tests.test_advanced_inventory_ops tests.test_inventory_reconciliation_tool \
+PYTHONPATH=. python -m unittest tests.test_advanced_inventory_ops tests.test_inventory_reconciliation_tool \
   tests.test_demand_forecast_tool tests.test_replenishment_engine_tool \
   tests.test_supplier_coordination_tools tests.test_network_fulfillment_tool \
   tests.test_inventory_quality_tool tests.test_inventory_finance_tool \
   tests.test_planning_scenario_tool tests.test_operations_control_tool \
   tests.test_extended_data_contract
+# Or run all 86 unit and contract tests:
+PYTHONPATH=. python -m unittest tests/test_*.py
 ```
 
 ## 14. Extension points
