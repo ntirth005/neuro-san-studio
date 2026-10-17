@@ -59,18 +59,28 @@
 
         "fallbacks": [
             {
-                # Try OpenAI first
+                # Try OpenRouter if OPENROUTER_API_KEY is provided
+                "class": "openrouter",
+                "model_name": "openai/gpt-4o-mini",
+                "max_retries": 2
+            },
+            {
+                # Fall back to a second OpenRouter model
+                "class": "openrouter",
+                "model_name": "meta-llama/llama-3.3-70b-instruct",
+                "max_retries": 2
+            },
+            {
+                # Try OpenAI
                 "class": "openai",
                 "model_name": "gpt-5.2",
             },
             {
-                # Fall back to Anthropic Claude if OpenAI is unavailable.
-                # Let neuro-san figure out the latest version of the model
+                # Fall back to Anthropic Claude
                 "model_name": "claude-sonnet",
             },
             {
-                # Fall back to Google Gemini if both OpenAI and Anthropic are unavailable.
-                # Let neuro-san figure out the latest version of the model
+                # Fall back to Google Gemini
                 "model_name": "gemini-3-flash",
             }
         ]

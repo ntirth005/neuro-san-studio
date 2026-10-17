@@ -92,4 +92,7 @@
     #     python -m neuro_san_studio run --server-http-port 8081 --nsflow-port 4174
     "agent_network_architect.hocon": false,
 
+    # Hackathon Submission: Multi-Agent Inventory Operations System
+    "inventory_ops.hocon": true,
+
 }

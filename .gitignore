@@ -26,6 +26,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 logs/
+output/
 # .python-version appears when we try to use uv
 .python-version
 uv.lock
