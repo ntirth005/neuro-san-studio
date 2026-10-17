@@ -65,6 +65,66 @@ agents without code, this studio handles the orchestration complexity so you can
 
 ---
 
+## Inventory Operations Agent
+
+This repository includes a hackathon build of an **Inventory Operations Agent**: an 11-agent,
+19-tool Neuro SAN network for small and medium e-commerce sellers. It answers 80 questions across
+inventory integrity, demand, replenishment, supplier lifecycle, multi-location fulfillment,
+quality and recalls, finance, planning scenarios, and daily operations.
+
+- Network definition: [`registries/inventory_ops.hocon`](registries/inventory_ops.hocon)
+- Architecture: [`architecture.md`](architecture.md)
+- Project summary: [`summary.md`](summary.md)
+- Synthetic data: [`data/`](data)
+
+### Run it
+
+```bash
+make install                 # create ./venv and install dependencies
+source venv/bin/activate
+export OPENAI_API_KEY="..."  # or GEMINI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY
+python -m neuro_san_studio validate registries/inventory_ops.hocon
+python -m neuro_san_studio run
+```
+
+Open the NSFlow UI at <http://localhost:4173/>, select `inventory_ops`, and ask:
+
+- "Which SKUs will run out in the next 14 days?"
+- "Why does the storefront show more stock than the warehouse?"
+- "What should I reorder under a budget of INR 30,000?"
+- "Which purchase orders are overdue for supplier confirmation?"
+- "Can I fulfil order ORD-LOC-9001 from another warehouse instead of buying more stock?"
+- "Which stock is damaged, quarantined, near expiry, or recalled?"
+- "How much cash is tied up, and what happens to service levels if inventory is reduced by 10%?"
+- "What happens if demand rises 20% next month or supplier SUP-003 fails completely?"
+- "What are the five most urgent inventory problems today?"
+- "Create an idempotent purchase-order draft for 20 units of SKU-001 under INR 10,000."
+
+Or use the terminal:
+
+```bash
+ns chat inventory_ops
+```
+
+### Verify the tools
+
+```bash
+python -m unittest tests.test_advanced_inventory_ops tests.test_inventory_reconciliation_tool \
+  tests.test_demand_forecast_tool tests.test_replenishment_engine_tool \
+  tests.test_supplier_coordination_tools tests.test_network_fulfillment_tool \
+  tests.test_inventory_quality_tool tests.test_inventory_finance_tool \
+  tests.test_planning_scenario_tool tests.test_operations_control_tool \
+  tests.test_extended_data_contract
+```
+
+All data in `data/` is synthetic and contains no personal or confidential information. Marketplace,
+email, and ERP actions are simulated locally; PO sends remain blocked until approval, spend limit,
+and integration health all pass. See [`architecture.md`](architecture.md),
+[`summary.md`](summary.md), and
+[`docs/inventory_ops_question_coverage.md`](docs/inventory_ops_question_coverage.md).
+
+---
+
 <!-- pyml disable-next-line no-inline-html -->
 <p align="center">
   Neuro SAN is the open-source library powering the Cognizant Neuro® AI Multi-Agent Accelerator, allowing domain experts,
