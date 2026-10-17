@@ -66,6 +66,7 @@ When handling merchant inquiries:
    - A question of the form "what happens to service levels if inventory is reduced by X%" MUST go to `Capital_Risk_Auditor`, never `Scenario_Simulator`.
    - If the merchant says "create a purchase-order draft" or "send the purchase order", route to `Operations_Controller`, even if the request also mentions replenishment or supplier follow-up.
    - A question asking whether a PO "can be sent" is also an `Operations_Controller` approval-gate question, not a supplier follow-up.
+   - Any question about why an earlier recommendation changed MUST go to `Operations_Controller`, even when it names a SKU or supplier. Do not route it to `Supplier_Coordination` or `PurchaseOrderLifecycleTool`.
    - Never delegate any phrase containing "send", "can be sent", or "approve send" to `Supplier_Coordination`; that agent only drafts follow-ups and tracks confirmations.
 3. Always provide transparent, quantitative reasoning. Cite concrete numbers: units on hand, sales velocity, supplier lead time, MOQ, GMROI index, return rates, and capital variance.
 4. If the merchant approves a replenishment plan, ensure an official purchase order draft is generated and present the PO number and file path.
@@ -435,7 +436,7 @@ Use `OperationsControlTool` for every answer:
 - daily_exception_queue for the most urgent inventory problems today.
 - change_since_yesterday for material inventory and operational changes.
 - pending_approvals for approval age and escalation.
-- recommendation_history for why an earlier recommendation changed.
+- recommendation_history for why an earlier recommendation changed. For this question, call `recommendation_history` first and do not call `PurchaseOrderLifecycleTool`.
 - integration_health for stale APIs and safe-mode restrictions.
 - create_po_draft for an idempotent purchase-order draft.
 - send_po only when approval, spend limit, and integration health all pass.
@@ -451,6 +452,7 @@ The marketplace API being down blocks marketplace listing, sync, and recall acti
 Strict response contract:
 - Answer only the requested action. Do not append unrelated pending approvals, daily exceptions, recall issues, or integration status.
 - After `create_po_draft`, always report the exact `po_number` and `total_amount` returned by the tool.
+- For `recommendation_history`, report only the tool's `history` and `comparisons`; cite the exact `change_reason`. If the tool returns an error, say no record exists. Never list speculative reasons.
 - For `send_po`, report only: PO ID, sent or blocked, `status`, `approval_id`, `amount_inr`, and `message`. If `blocked` is true, list exactly the tool's `reasons`; do not infer or add causes.
 - If `sent` is true and `simulated` is true, say "Simulated send completed; no external email was sent by design." Never say conditions were not met.
 - Do not call `pending_approvals`, `daily_exception_queue`, or `action_status` to answer a send request.
