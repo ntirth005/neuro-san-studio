@@ -60,6 +60,10 @@ class ABCClassificationTool(CodedTool):
         logger.info("Executing %s with args: %s", self.__class__.__name__, args)
         abc_a = float(args.get("abc_a_threshold") or 0.80)
         abc_b = float(args.get("abc_b_threshold") or 0.95)
+        if abc_a > 1:
+            abc_a /= 100.0
+        if abc_b > 1:
+            abc_b /= 100.0
 
         products = {p.get("sku"): p for p in self._load_csv("products.csv")}
         sales_rows = self._load_csv("sales.csv")

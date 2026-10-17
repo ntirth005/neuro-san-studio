@@ -15,7 +15,7 @@
             "Trace why SKU-006 shows negative inventory in the marketplace.",
             "Which purchase orders are overdue for supplier confirmation?",
             "The supplier can only ship 7 of 12 units. What are my options?",
-            "Can I fulfil a 12-unit order from another warehouse instead of buying more stock?",
+            "Can I fulfil order ORD-LOC-9001 from another warehouse instead of buying more stock?",
             "Which locations will run out first, and where is excess stock that could cover a shortage?",
             "Which products need a physical stock count, and how much stock is damaged, quarantined, or near expiry?",
             "Are we selling stock that should be recalled or blocked?",
@@ -355,6 +355,12 @@ Use `NetworkFulfillmentTool` for every answer:
 - closure_simulation to model a temporary fulfillment-center closure.
 
 Always report location IDs, usable units, transfer lead time, transfer cost, capacity, and the proposed safe resolution. Never promise that a transfer has executed; transfers are plans until approved.
+Strict rules:
+- "Can I fulfil N units from another warehouse?" requires a SKU or customer order ID. If the inquiry names an order, pass `order_id`; if it names a SKU, pass `sku` and quantity. Do not ask the user for warehouse data that is already in `data/`.
+- For excess-stock questions, call `transfer_candidates` or `redistribute_plan`. Report only transfers present in the tool's `recommendations`; if none exist, say no excess stock is available.
+- Never recommend transferring out of a location that the tool marks as a deficit location.
+- A transfer can cover a shortage only when the SKU matches. If the only excess rows are for a different SKU, do not list them as candidates; state that no same-SKU excess stock is available.
+- For a general "where is excess stock that could cover a shortage?" question, call `redistribute_plan` and report only same-SKU `recommendations`.
 """,
             "tools": [
                 "NetworkFulfillmentTool",
@@ -399,6 +405,9 @@ Use `InventoryQualityTool` for every answer:
 - recall_check for recall and blocked-stock exposure.
 
 Critical rule: a positive inventory quantity never makes a batch sellable. Check quality status, expiry, recall, reservation, and channel eligibility first. Preserve the audit trail and never claim a recall block was executed without confirmation.
+Strict rules:
+- "Which products need a physical stock count?" calls `cycle_count_priority` and reports only its ranked priority list.
+- "Are we selling recalled or blocked stock?" calls `recall_check` and reports only recall or blocked records. Do not describe damaged or quarantined stock as a recall.
 """,
             "tools": [
                 "InventoryQualityTool",
@@ -488,6 +497,11 @@ You are the Portfolio Risk Strategist Agent.
 Your role is segmenting the catalog into ABC (revenue contribution: 80/15/5%) and XYZ (demand predictability: CV < 0.5, 0.5-1.0, >= 1.0) matrices.
 Always call `ABCClassificationTool` to retrieve authoritative catalog segmentation.
 
+Strict reporting:
+- Report `portfolio_summary.class_A_count`, `class_B_count`, `class_C_count`, and `class_A_revenue_pct` exactly as returned.
+- Class A is the smallest set of top-revenue SKUs whose cumulative revenue reaches 80%. Never label every SKU as Class A and never claim Class A drives 100% unless the tool says so.
+- Use the exact `abc_class`, `xyz_class`, `segment`, and `cumulative_revenue_pct` values from `classified_skus`.
+
 Strategic Matrix:
 - AX (High Revenue, Predictable): Automate replenishment with tight Just-In-Time buffer.
 - AZ (High Revenue, Erratic): Protect with dynamic stochastic safety stock.
@@ -518,6 +532,10 @@ Strategic Matrix:
                             "type": "number",
                             "description": "Additional delay days added to supplier delivery times (e.g. 5, 7, 14)."
                         },
+                        "lead_time_add_days": {
+                            "type": "number",
+                            "description": "Additional delay days passed to PlanningScenarioTool (e.g. 7)."
+                        },
                         "demand_surge_percent": {
                             "type": "number",
                             "description": "Percentage increase in consumer sales demand (e.g. 20, 50, 100)."
@@ -544,6 +562,9 @@ When reporting simulation findings:
 - Identify the first SKU that will fail / collapse to zero stock.
 - Report total projected lost GMV (revenue at risk) and lost gross profit.
 - Detail the exact stockout gap and recommend emergency buffer quantities needed to prevent catastrophic stockout.
+- If lead times slip by N days, call `PlanningScenarioTool` with action `lead_time_double`, `lead_time_multiplier` 1, and `lead_time_add_days` N.
+- If demand rises by X%, call `PlanningScenarioTool` with action `demand_surge` and `demand_change_percent` X. Never reuse a service-level or inventory-reduction result for a demand-surge question.
+- For compound questions, call each requested scenario and report each result separately with its own numbers.
 """,
             "tools": [
                 "ScenarioSimulationTool",
@@ -1118,6 +1139,10 @@ When reporting simulation findings:
                         "lead_time_multiplier": {
                             "type": "number",
                             "description": "Lead-time multiplier."
+                        },
+                        "lead_time_add_days": {
+                            "type": "number",
+                            "description": "Additional days added to every supplier lead time (e.g. 7)."
                         },
                         "budget_change_percent": {
                             "type": "number",

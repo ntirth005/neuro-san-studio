@@ -153,7 +153,9 @@ class PlanningScenarioTool(CodedTool):
             "items": items,
         }
 
-    def _lead_time_double(self, multiplier: float, horizon_days: int) -> Dict[str, Any]:
+    def _lead_time_double(
+        self, multiplier: float, horizon_days: int, add_days: float = 0.0
+    ) -> Dict[str, Any]:
         """Recompute stockout risk and safety stock under a lead-time shock."""
         items = []
         total_lost_margin = 0.0
@@ -163,7 +165,7 @@ class PlanningScenarioTool(CodedTool):
             usable = self.store.to_float(item.get("inventory", {}).get("usable_on_hand"))
             incoming = self.store.to_float(item.get("inventory", {}).get("incoming"))
             lead_time = self.store.to_float(item.get("metrics", {}).get("lead_time_days"), 7.0)
-            stressed_lead_time = lead_time * multiplier
+            stressed_lead_time = lead_time * multiplier + add_days
             lead_time_demand = velocity * stressed_lead_time
             safety_stock = math.ceil(1.65 * std_dev * math.sqrt(stressed_lead_time))
             required_position = math.ceil(lead_time_demand + safety_stock)
@@ -191,6 +193,7 @@ class PlanningScenarioTool(CodedTool):
             "as_of": self.store.reference_time().isoformat(),
             "scenario": "lead_time_double",
             "lead_time_multiplier": multiplier,
+            "lead_time_add_days": add_days,
             "horizon_days": horizon_days,
             "assumptions": ["Lead time scales uniformly.", "Demand variability is unchanged."],
             "summary": {
@@ -486,7 +489,10 @@ class PlanningScenarioTool(CodedTool):
         horizon = self.store.to_int(args.get("horizon_days"), 30)
         limit = self.store.to_int(args.get("limit"), 2)
         demand_change = self.store.to_float(args.get("demand_change_percent"), 20.0)
-        lead_multiplier = self.store.to_float(args.get("lead_time_multiplier"), 2.0)
+        lead_add = self.store.to_float(args.get("lead_time_add_days"), 0.0)
+        lead_multiplier = self.store.to_float(
+            args.get("lead_time_multiplier"), 1.0 if lead_add > 0 else 2.0
+        )
         budget_change = self.store.to_float(args.get("budget_change_percent"), -30.0)
         budget = self.store.to_float(args.get("budget_limit"), 30000.0)
         uplift = self.store.to_float(args.get("uplift_percent"), 20.0)
@@ -495,7 +501,7 @@ class PlanningScenarioTool(CodedTool):
         if action == "demand_surge":
             return self._demand_surge(demand_change, horizon)
         if action == "lead_time_double":
-            return self._lead_time_double(lead_multiplier, horizon)
+            return self._lead_time_double(lead_multiplier, horizon, lead_add)
         if action == "budget_cut":
             return self._budget_cut(budget_change, budget)
         if action == "discontinue_slow":
